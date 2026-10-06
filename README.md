@@ -7,6 +7,8 @@ headset off.
 
 This is a source port, not an injector: OpenXR is built into the game.
 
+**Watch the install and gameplay video:** [I Put Forsaken in VR and It's Pure Chaos](https://youtu.be/jCjcgGU_3lw)
+
 ---
 
 ## Installing
@@ -16,6 +18,12 @@ This is a source port, not an injector: OpenXR is built into the game.
    question: whether to add Forsaken VR to your Steam library.
 3. Connect your headset (Virtual Desktop or SteamVR), then start **Forsaken VR**
    from the desktop shortcut, or from Steam.
+
+<a href="https://youtu.be/jCjcgGU_3lw"><img src="docs/playing-in-vr.jpg" width="100%" alt="Playing Forsaken in VR on stream"></a>
+
+<img src="docs/screenshot-1.jpg" width="49%" alt="Your biker in third person over the lava"> <img src="docs/screenshot-2.jpg" width="49%" alt="A fight in the volcano level">
+
+Your biker in third person, new in VR (left), and a fight in the volcano level (right).
 
 What Setup does, all on your machine:
 
