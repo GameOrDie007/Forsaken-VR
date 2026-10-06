@@ -1,0 +1,417 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug D3D|Win32">
+      <Configuration>Debug D3D</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug Open|Win32">
+      <Configuration>Debug Open</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release Open|Win32">
+      <Configuration>Release Open</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{89BBCE52-A93E-4A93-A1E3-44FB23777195}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug D3D|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Open|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Open|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug D3D|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC70.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug Open|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC70.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release Open|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC70.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release Open|Win32'">
+    </OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release Open|Win32'">.\temp\release_open\trash\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release Open|Win32'">true</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug Open|Win32'">
+    </OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug Open|Win32'">.\temp\debug_open\trash\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug Open|Win32'">true</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug D3D|Win32'">
+    </OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug D3D|Win32'">.\temp\debug_d3d\trash\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug D3D|Win32'">true</LinkIncremental>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug D3D|Win32'">lib\libzlib;lib\libpng;lib\lua\include;lib\enet\include;lib\Microsoft DirectX SDK %28August 2009%29\Include;lib\OpenAL 1.1 SDK\include;lib\SDL-1.2.14\include;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include</IncludePath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug D3D|Win32'">lib\libpng;lib\libzlib;lib\Microsoft DirectX SDK %28August 2009%29\Lib\x86;lib\SDL-1.2.14\lib;lib\OpenAL 1.1 SDK\libs\Win32;lib\lua;lib\enet;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug Open|Win32'">lib\libzlib;lib\libpng;lib\lua\include;lib\enet\include;lib\Microsoft DirectX SDK %28August 2009%29\Include;lib\OpenAL 1.1 SDK\include;lib\SDL-1.2.14\include;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release Open|Win32'">lib\libzlib;lib\libpng;lib\lua\include;lib\enet\include;lib\Microsoft DirectX SDK %28August 2009%29\Include;lib\OpenAL 1.1 SDK\include;lib\SDL-1.2.14\include;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include</IncludePath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug Open|Win32'">lib\libpng;lib\libzlib;lib\Microsoft DirectX SDK %28August 2009%29\Lib\x86;lib\SDL-1.2.14\lib;lib\OpenAL 1.1 SDK\libs\Win32;lib\lua;lib\enet;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release Open|Win32'">lib\libpng;lib\libzlib;lib\Microsoft DirectX SDK %28August 2009%29\Lib\x86;lib\SDL-1.2.14\lib;lib\OpenAL 1.1 SDK\libs\Win32;lib\lua;lib\enet;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib;$(LibraryPath)</LibraryPath>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug D3D|Win32'">debug_d3d</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug Open|Win32'">debug_open</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release Open|Win32'">release_open</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release Open|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>WIN32;SOUND_SUPPORT;SOUND_DSOUND;OPENGL;OPENGL1;NET_ENET_2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <TypeLibraryName>.\temp\release_open\ProjectX.tlb</TypeLibraryName>
+    </Midl>
+    <ClCompile>
+      <Optimization>Full</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <AdditionalIncludeDirectories>.\;include;;lib\enet\include;lib\lua\include;lib\include;ai\aiinclude;lib\libzlib;lib\libpng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;SOUND_SUPPORT;SOUND_OPENAL;TEXTURE_PNG;OPENGL;OPENGL1;NET_ENET_2;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;BSP;LUA_USE_APICHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalOptions> /J</AdditionalOptions>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <PrecompiledHeaderOutputFile>.\temp\release_open\trash\ProjectX.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\temp\release_open\trash\</AssemblerListingLocation>
+      <ObjectFileName>.\temp\release_open\trash\</ObjectFileName>
+      <ProgramDataBaseFileName>.\temp\release_open\trash\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;SOUND_SUPPORT;SOUND_OPENAL;OPENGL;OPENGL1;NET_ENET_2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
+    <Link>
+      <AdditionalOptions>/MACHINE:I386 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>gdi32.lib;advapi32.lib;ole32.lib;kernel32.lib;user32.lib;odbc32.lib;odbccp32.lib;winmm.lib;d3d9.lib;d3dx9.lib;dxerr.lib;comctl32.lib;ws2_32.lib;enet.lib;lua5.1_dll.lib;mime.lib;socket.lib;dxguid.lib;vfw32.lib;version.lib;sdl.lib;sdlmain.lib;GlU32.Lib;openal32.lib;zlib.lib;libpng.lib;opengl32.lib</AdditionalDependencies>
+      <OutputFile>release_open.exe</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>lib\enet;lib\lua</AdditionalLibraryDirectories>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>release_open.pdb</ProgramDatabaseFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+    </Link>
+    <Xdcmake>
+      <OutputFile>temp\release_open\$(OutDir)$(TargetName).xml</OutputFile>
+    </Xdcmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug Open|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>WIN32;SOUND_SUPPORT;SOUND_DSOUND;OPENGL;OPENGL1;NET_ENET_2;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <TypeLibraryName>.\temp\debug_open\ProjectX.tlb</TypeLibraryName>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>.\;include;;lib\enet\include;lib\lua\include;lib\include;ai\aiinclude;lib\libzlib;lib\libpng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;SOUND_SUPPORT;SOUND_OPENAL;TEXTURE_PNG;OPENGL;OPENGL1;NET_ENET_2;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;DEBUG_ON;DEBUG_COMP;DEBUG_SPOTFX_SOUND;BSP;DEBUG_VIEWPORT;LUA_USE_APICHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalOptions> /J</AdditionalOptions>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <PrecompiledHeaderOutputFile>.\temp\debug_open\trash\ProjectX.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\temp\debug_open\trash\</AssemblerListingLocation>
+      <ObjectFileName>.\temp\debug_open\trash\</ObjectFileName>
+      <ProgramDataBaseFileName>.\temp\debug_open\trash\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;SOUND_SUPPORT;SOUND_OPENAL;OPENGL;OPENGL1;NET_ENET_2;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
+    <Link>
+      <AdditionalOptions>/MACHINE:I386 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>gdi32.lib;advapi32.lib;ole32.lib;kernel32.lib;user32.lib;odbc32.lib;odbccp32.lib;winmm.lib;d3d9.lib;d3dx9.lib;dxerr.lib;comctl32.lib;ws2_32.lib;enet.lib;lua5.1_dll.lib;mime.lib;socket.lib;dxguid.lib;vfw32.lib;version.lib;sdl.lib;sdlmain.lib;GlU32.Lib;openal32.lib;zlib.lib;libpng.lib;opengl32.lib</AdditionalDependencies>
+      <OutputFile>debug_open.exe</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>lib\enet;lib\lua</AdditionalLibraryDirectories>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>debug_open.pdb</ProgramDatabaseFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>
+      </OptimizeReferences>
+      <EnableCOMDATFolding>
+      </EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+    </Link>
+    <Xdcmake>
+      <OutputFile>temp\debug_open\$(OutDir)$(TargetName).xml</OutputFile>
+    </Xdcmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug D3D|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>WIN32;SOUND_SUPPORT;SOUND_DSOUND;SOUND_OPENAL;NET_ENET_2;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <TypeLibraryName>.\temp\debug_d3d\ProjectX.tlb</TypeLibraryName>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>.\;include;;lib\enet\include;lib\lua\include;lib\include;ai\aiinclude;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;SOUND_SUPPORT;SOUND_OPENAL;NET_ENET_2;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;DEBUG_ON;DEBUG_COMP;DEBUG_SPOTFX_SOUND;BSP;DEBUG_VIEWPORT;LUA_USE_APICHECK;D3D;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalOptions> /J</AdditionalOptions>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <PrecompiledHeaderOutputFile>.\temp\debug_d3d\trash\ProjectX.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\temp\debug_d3d\trash\</AssemblerListingLocation>
+      <ObjectFileName>.\temp\debug_d3d\trash\</ObjectFileName>
+      <ProgramDataBaseFileName>.\temp\debug_d3d\trash\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;SOUND_SUPPORT;SOUND_OPENAL;NET_ENET_2;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
+    <Link>
+      <AdditionalOptions>/MACHINE:I386 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>gdi32.lib;advapi32.lib;ole32.lib;kernel32.lib;user32.lib;odbc32.lib;odbccp32.lib;winmm.lib;d3d9.lib;d3dx9.lib;dxerr.lib;comctl32.lib;ws2_32.lib;enet.lib;lua5.1_dll.lib;mime.lib;socket.lib;dxguid.lib;vfw32.lib;version.lib;sdl.lib;sdlmain.lib;GlU32.Lib;openal32.lib;zlib.lib;libpng.lib</AdditionalDependencies>
+      <OutputFile>debug_d3d.exe</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>lib\enet;lib\lua</AdditionalLibraryDirectories>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>debug_d3d.pdb</ProgramDatabaseFile>
+      <GenerateMapFile>false</GenerateMapFile>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>
+      </OptimizeReferences>
+      <EnableCOMDATFolding>
+      </EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+    </Link>
+    <Xdcmake>
+      <OutputFile>temp\debug_d3d\$(OutDir)$(TargetName).xml</OutputFile>
+    </Xdcmake>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="2dpolys.c" />
+    <ClCompile Include="2dtextures.c" />
+    <ClCompile Include="ai\aicrashandburn.c" />
+    <ClCompile Include="ai\aidogfight.c" />
+    <ClCompile Include="ai\aiexogenon.c" />
+    <ClCompile Include="ai\aifire.c" />
+    <ClCompile Include="ai\aifleshmorph.c" />
+    <ClCompile Include="ai\aifollow.c" />
+    <ClCompile Include="ai\aiformation.c" />
+    <ClCompile Include="ai\aiidle.c" />
+    <ClCompile Include="ai\aikillmine.c" />
+    <ClCompile Include="ai\ailib.c" />
+    <ClCompile Include="ai\aimain.c" />
+    <ClCompile Include="ai\aimovet.c" />
+    <ClCompile Include="ai\aipingoff.c" />
+    <ClCompile Include="ai\aipsycho.c" />
+    <ClCompile Include="ai\airetreat.c" />
+    <ClCompile Include="ai\aiscan.c" />
+    <ClCompile Include="ai\aispline.c" />
+    <ClCompile Include="bgobjects.c" />
+    <ClCompile Include="breakpad.cpp" />
+    <ClCompile Include="bsp.c" />
+    <ClCompile Include="camera.c" />
+    <ClCompile Include="collision.c" />
+    <ClCompile Include="compobjects.c" />
+    <ClCompile Include="config.c" />
+    <ClCompile Include="controls.c" />
+    <ClCompile Include="demo.c" />
+    <ClCompile Include="enemies.c" />
+    <ClCompile Include="extforce.c" />
+    <ClCompile Include="file.c" />
+    <ClCompile Include="goal.c" />
+    <ClCompile Include="input_dinput.c" />
+    <ClCompile Include="input_sdl.c" />
+    <ClCompile Include="lights.c" />
+    <ClCompile Include="lines.c" />
+    <ClCompile Include="loadsave.c" />
+    <ClCompile Include="lua_common.c" />
+    <ClCompile Include="lua_config.c" />
+    <ClCompile Include="lua_games.c" />
+    <ClCompile Include="main.c" />
+    <ClCompile Include="main_sdl.c" />
+    <ClCompile Include="math_error.c" />
+    <ClCompile Include="mload.c" />
+    <ClCompile Include="models.c" />
+    <ClCompile Include="multiplayer.c" />
+    <ClCompile Include="mxaload.c" />
+    <ClCompile Include="mxload.c" />
+    <ClCompile Include="net_enet.c" />
+    <ClCompile Include="net_enet_2.c" />
+    <ClCompile Include="net_tracker.c" />
+    <ClCompile Include="networking.c" />
+    <ClCompile Include="new3d.c" />
+    <ClCompile Include="node.c" />
+    <ClCompile Include="oct2.c" />
+    <ClCompile Include="pickups.c" />
+    <ClCompile Include="polys.c" />
+    <ClCompile Include="primary.c" />
+    <ClCompile Include="quat.c" />
+    <ClCompile Include="render_d3d.cpp" />
+    <ClCompile Include="render_opengl.c" />
+    <ClCompile Include="restart.c" />
+    <ClCompile Include="rtlight.c" />
+    <ClCompile Include="screenpolys.c" />
+    <ClCompile Include="secondary.c" />
+    <ClCompile Include="sfx.c" />
+    <ClCompile Include="ships.c" />
+    <ClCompile Include="singleplayer.c" />
+    <ClCompile Include="skin.c" />
+    <ClCompile Include="sound_dsound.c" />
+    <ClCompile Include="sound_openal.c" />
+    <ClCompile Include="sphere.c" />
+    <ClCompile Include="spotfx.c" />
+    <ClCompile Include="stats.c" />
+    <ClCompile Include="teleport.c" />
+    <ClCompile Include="text.c" />
+    <ClCompile Include="texture_devil.c" />
+    <ClCompile Include="texture_png.c" />
+    <ClCompile Include="texture_sdl.c" />
+    <ClCompile Include="timer.c" />
+    <ClCompile Include="title.c" />
+    <ClCompile Include="tload.c" />
+    <ClCompile Include="transexe.c" />
+    <ClCompile Include="trigarea.c" />
+    <ClCompile Include="triggers.c" />
+    <ClCompile Include="util.c" />
+    <ClCompile Include="visi.c" />
+    <ClCompile Include="water.c" />
+    <ClCompile Include="xmem.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="input.h" />
+    <ClInclude Include="sound.h" />
+    <ClInclude Include="include\2dpolys.h" />
+    <ClInclude Include="include\2dtextures.h" />
+    <ClInclude Include="ai\aiinclude\ai.h" />
+    <ClInclude Include="include\bgobjects.h" />
+    <ClInclude Include="include\bsp.h" />
+    <ClInclude Include="include\camera.h" />
+    <ClInclude Include="include\collision.h" />
+    <ClInclude Include="include\compobjects.h" />
+    <ClInclude Include="include\config.h" />
+    <ClInclude Include="include\controls.h" />
+    <ClInclude Include="demo.h" />
+    <ClInclude Include="include\enemies.h" />
+    <ClInclude Include="include\englishlocal.h" />
+    <ClInclude Include="include\extforce.h" />
+    <ClInclude Include="include\file.h" />
+    <ClInclude Include="include\goal.h" />
+    <ClInclude Include="include\lights.h" />
+    <ClInclude Include="include\lines.h" />
+    <ClInclude Include="include\loadsave.h" />
+    <ClInclude Include="include\local.h" />
+    <ClInclude Include="include\localtitle.h" />
+    <ClInclude Include="lua_common.h" />
+    <ClInclude Include="lua_config.h" />
+    <ClInclude Include="lua_games.h" />
+    <ClInclude Include="include\main.h" />
+    <ClInclude Include="include\mload.h" />
+    <ClInclude Include="include\models.h" />
+    <ClInclude Include="include\multiplayer.h" />
+    <ClInclude Include="include\mxaload.h" />
+    <ClInclude Include="include\mxload.h" />
+    <ClInclude Include="net.h" />
+    <ClInclude Include="net_tracker.h" />
+    <ClInclude Include="include\networking.h" />
+    <ClInclude Include="include\new3d.h" />
+    <ClInclude Include="include\node.h" />
+    <ClInclude Include="include\object.h" />
+    <ClInclude Include="include\pickups.h" />
+    <ClInclude Include="include\polys.h" />
+    <ClInclude Include="include\primary.h" />
+    <ClInclude Include="include\quat.h" />
+    <ClInclude Include="render.h" />
+    <ClInclude Include="include\restart.h" />
+    <ClInclude Include="include\rtlight.h" />
+    <ClInclude Include="include\screenpolys.h" />
+    <ClInclude Include="include\secondary.h" />
+    <ClInclude Include="include\sfx.h" />
+    <ClInclude Include="include\ships.h" />
+    <ClInclude Include="singleplayer.h" />
+    <ClInclude Include="include\skin.h" />
+    <ClInclude Include="include\sphere.h" />
+    <ClInclude Include="include\spotfx.h" />
+    <ClInclude Include="include\stats.h" />
+    <ClInclude Include="include\teleport.h" />
+    <ClInclude Include="include\text.h" />
+    <ClInclude Include="texture.h" />
+    <ClInclude Include="include\timer.h" />
+    <ClInclude Include="include\title.h" />
+    <ClInclude Include="include\tload.h" />
+    <ClInclude Include="include\transexe.h" />
+    <ClInclude Include="include\trigarea.h" />
+    <ClInclude Include="include\triggers.h" />
+    <ClInclude Include="util.h" />
+    <ClInclude Include="version.h" />
+    <ClInclude Include="include\visi.h" />
+    <ClInclude Include="include\water.h" />
+    <ClInclude Include="include\xmem.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

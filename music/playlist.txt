@@ -1,0 +1,97 @@
+# Forsaken VR: music playlist
+#
+# One entry per line:   <key>  <filename under Music/OGG>
+#
+#   key      = a level's folder name (see Data/levels), or "menu" for the
+#              title screen. "*" lines form a fallback pool used for any
+#              level not named below, picked by level number.
+#   filename = everything after the first run of spaces. Spaces and
+#              brackets in the name are fine; do not quote it.
+#
+# Lines starting with # or ; are ignored. Edit and restart; there is nothing to rebuild.
+# Volume: -musicvol 0.0 to 1.0 on the command line (there is no in-game
+# slider yet). -nomusic turns the whole thing off.
+
+
+# --- title screen ---------------------------------------------------
+menu            01_Forsaken.ogg
+
+
+# --- single player campaign (Data/levels/mission.dat, in order) ------
+vol2            08_Flameout.ogg
+asubchb         10_Labyrinth.ogg
+nps-sp01        05_Reactor.ogg
+thermal         12_Pyrolite.ogg
+fedbankv        07_Condemned.ogg
+pship           02_Gargantuan.ogg
+spc-sp01        18_Cyclotron.ogg
+bio-sphere      11_Nubia.ogg
+nukerf          05_Reactor.ogg
+capship         02_Gargantuan.ogg
+space           09_The_Dead_System.ogg
+high            06_Pure_Bitch_Power.ogg
+military        07_Condemned.ogg
+azt-sp01        03_Sanctuary_Of_Tloloc.ogg
+azchb           03_Sanctuary_Of_Tloloc.ogg
+fishy           13_The Dead System [Force Of Angels Remix].ogg
+
+
+# --- multiplayer / skirmish levels (Data/levels/battle.dat) ----------
+ship            02_Gargantuan.ogg
+accworld        18_Cyclotron.ogg
+alpha           06_Pure_Bitch_Power.ogg
+arena           06_Pure_Bitch_Power.ogg
+asteroid        09_The_Dead_System.ogg
+astro           18_Cyclotron.ogg
+aztec           03_Sanctuary_Of_Tloloc.ogg
+biodome         11_Nubia.ogg
+campers         10_Labyrinth.ogg
+cruise          02_Gargantuan.ogg
+dabiz           04_Untitled_#4.ogg
+fourball        06_Pure_Bitch_Power.ogg
+gas             12_Pyrolite.ogg
+geodome         11_Nubia.ogg
+grave           07_Condemned.ogg
+ians            04_Untitled_#4.ogg
+midpand         10_Labyrinth.ogg
+nedwheel        18_Cyclotron.ogg
+night           07_Condemned.ogg
+nightship       02_Gargantuan.ogg
+nuke-mp         05_Reactor.ogg
+oldtemple       03_Sanctuary_Of_Tloloc.ogg
+pandora         11_Nubia.ogg
+probeworld      09_The_Dead_System.ogg
+pyramid         03_Sanctuary_Of_Tloloc.ogg
+refinery        12_Pyrolite.ogg
+sewer           10_Labyrinth.ogg
+smalls          04_Untitled_#4.ogg
+storm           08_Flameout.ogg
+subway          10_Labyrinth.ogg
+sunk            11_Nubia.ogg
+therm           12_Pyrolite.ogg
+traina          04_Untitled_#4.ogg
+tube            05_Reactor.ogg
+tunnels         10_Labyrinth.ogg
+tworooms        06_Pure_Bitch_Power.ogg
+volcano         08_Flameout.ogg
+
+
+# --- fallback pool for anything not listed above ---------------------
+# Custom or add-on levels cycle through these by level number.
+*               02_Gargantuan.ogg
+*               05_Reactor.ogg
+*               06_Pure_Bitch_Power.ogg
+*               08_Flameout.ogg
+*               09_The_Dead_System.ogg
+*               12_Pyrolite.ogg
+*               18_Cyclotron.ogg
+
+
+# --- unused by default ------------------------------------------------
+# The N64 arrangements and the remix are here if you want to swap any of
+# the above for them:
+#   13_The Dead System [Force Of Angels Remix].ogg
+#   14_The_Dead_System [N64 Version].ogg
+#   15_Condemned [N64 Version].ogg
+#   16_Pure_Power [N64 Version].ogg
+#   17_Flame_Out [N64 Version].ogg

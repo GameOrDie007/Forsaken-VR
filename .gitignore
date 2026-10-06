@@ -1,0 +1,34 @@
+*.sh
+# ...but our Windows build scripts are part of the repo
+!build-luasocket.sh
+*.o
+projectx*
+libs*
+unix*
+mingw*
+data
+configs
+logs
+pilots
+savegame
+*.dll
+gmon.out
+
+# per-user pilot config, rewritten by the game on every quit
+Player.txt
+Player.txt.*
+
+# packaged builds
+dist
+
+# Soundtrack and intro movie. These are byte-identical to files from Forsaken
+# Remastered, which is Nightdive's commercial release: they are not ours to
+# commit or to publish. setup.ps1 copies them from the player's own install.
+# playlist.txt is the exception: the level-to-track mapping is our own work.
+movies/
+music/*
+!music/playlist.txt
+
+# crash reports the game writes beside itself
+crash.txt
+crash.prev.txt
