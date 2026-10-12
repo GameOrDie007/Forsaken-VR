@@ -62,15 +62,19 @@ $QuestHere = (Resolve-Path -LiteralPath $PSScriptRoot).ProviderPath
 # The PC Setup sits beside this script in the download as setup-common.ps1 (not
 # setup.ps1: the Game Or Die installer takes a zip with a setup.ps1 for the PC
 # version); in the source tree it is package\setup.ps1.  It stops after defining
-# its functions when FORSAKEN_VR_SETUP_LIBRARY is set.  The switches are handed
-# on, because loading it binds its parameters afresh.
+# its functions when FORSAKEN_VR_SETUP_LIBRARY is set.  Loading it binds its
+# parameters afresh in this scope, so the shared switches are handed on and the
+# rest (the mode switches, the dropped folders, the game path) are kept and put
+# back: without that, -Detect, -Uninstall and -Collect all ran an install.
 $pcSetup = Join-Path $QuestHere 'setup-common.ps1'
 if (-not (Test-Path -LiteralPath $pcSetup)) { $pcSetup = Join-Path (Split-Path -Parent $QuestHere) 'setup.ps1' }
 if (-not (Test-Path -LiteralPath $pcSetup)) { throw ('setup-common.ps1 is missing beside ' + $PSCommandPath) }
 $keepDropped = @($Dropped); $keepGamePath = @($GamePath)
+$keepMode = @{ Uninstall = [bool]$Uninstall; Collect = [bool]$Collect; Detect = [bool]$Detect; Start = [bool]$Start }
 $env:FORSAKEN_VR_SETUP_LIBRARY = '1'
 . $pcSetup -Quiet:$Quiet -Json:$Json -NoPrompt:$NoPrompt -NoSearch:$NoSearch -DataPath $DataPath -NoDownload:$NoDownload
 $env:FORSAKEN_VR_SETUP_LIBRARY = $null
+$Uninstall = $keepMode.Uninstall; $Collect = $keepMode.Collect; $Detect = $keepMode.Detect; $Start = $keepMode.Start
 $Dropped = $keepDropped
 if ($keepGamePath -and $keepGamePath[0]) { $NoSearch = $true; $Dropped = @($Dropped) + @($keepGamePath | ForEach-Object { $_ -split ';' } | Where-Object { $_ }) }
 if ($Quiet -or $Json) { $NoPrompt = $true }
