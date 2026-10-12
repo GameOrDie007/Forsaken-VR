@@ -91,6 +91,14 @@ foreach ($d in $Dropped) {
 # on other drives in steamapps\libraryfolders.vdf. GOG registers each game
 # separately. Check both: a player who owns it in one place should never have
 # to type a path.
+
+# A path from two parts, as text.  Join-Path asks the drive to exist, so one
+# Steam library on a drive that is gone (a removed USB drive still listed in
+# libraryfolders.vdf) stopped the whole search; this never fails.
+function Combine-Path([string] $a, [string] $b) {
+    try { return [System.IO.Path]::Combine($a, $b) } catch { return '' }
+}
+
 function Get-SteamRoots {
     $roots = @()
     foreach ($k in @('HKCU:\Software\Valve\Steam', 'HKLM:\SOFTWARE\WOW6432Node\Valve\Steam')) {
@@ -103,7 +111,7 @@ function Get-SteamRoots {
     }
     $extra = @()
     foreach ($r in $roots) {
-        $vdf = Join-Path $r 'steamapps\libraryfolders.vdf'
+        $vdf = Combine-Path $r 'steamapps\libraryfolders.vdf'
         if (Test-Path $vdf) {
             foreach ($line in (Get-Content $vdf)) {
                 if ($line -match '"path"\s+"(.+?)"') { $extra += $matches[1].Replace('\\', '\') }
@@ -115,7 +123,7 @@ function Get-SteamRoots {
 
 function Find-Remaster {
     foreach ($r in (Get-SteamRoots)) {
-        $p = Join-Path $r 'steamapps\common\Forsaken Remastered'
+        $p = Combine-Path $r 'steamapps\common\Forsaken Remastered'
         if (Test-Path $p) { return $p }
     }
     # GOG

@@ -75,7 +75,11 @@ extern RENDEROBJECT RenderBufs[4];
 extern bool render_flip( render_info_t *info );
 extern bool QuitRequested;
 
-#define MOVIE_AL_BUFFERS 8
+/* Each buffer holds one decoded Vorbis block, about 23 ms: 8 of them were
+   under 0.2 s queued, and a slow headset frame on the Steam Frame (65 ms)
+   drained it, so the sound and the picture on its clock stopped. 32 is
+   about three quarters of a second. */
+#define MOVIE_AL_BUFFERS 32
 #define MOVIE_READ_CHUNK 8192
 #define MOVIE_PCM_FRAMES 4096
 
@@ -114,6 +118,7 @@ typedef struct
 
 	int              frames_shown;
 	long             blockin_refused;
+	int              ran_dry;          /* the sound stopped for want of data and was restarted */
 	ALint            al_queued;
 	ALint            al_state;
 } movie_t;
@@ -336,7 +341,11 @@ static void movie_queue_audio( movie_t * m )
 	alGetSourcei( m->source, AL_BUFFERS_QUEUED, &queued );
 	alGetSourcei( m->source, AL_SOURCE_STATE, &state );
 	if ( filled > 0 && queued > 0 && state != AL_PLAYING )
+	{
+		if ( state == AL_STOPPED )
+			m->ran_dry++;
 		alSourcePlay( m->source );
+	}
 
 	m->al_queued = queued;
 	m->al_state  = state;
@@ -538,7 +547,7 @@ bool movie_play( const char * path )
 	memset( &m, 0, sizeof(m) );
 	movie_worst_drift_ms = 0.0;
 
-	m.f = fopen( path, "rb" );
+	m.f = fopen( convert_path( (char *) path ), "rb" );	/* lowercase, forward slashes off Windows */
 	if ( !m.f )
 	{
 		DebugPrintf( "movie: no %s, skipping the intro\n", path );
@@ -693,6 +702,8 @@ bool movie_play( const char * path )
 	{
 		ogg_int64_t gp;
 		double      clock;
+		bool        new_frame, repeat;
+		int         reads;
 
 		if ( movie_skipped() )
 			break;
@@ -718,29 +729,39 @@ bool movie_play( const char * path )
 		   while a frame is held: an earlier version stopped reading until the
 		   held frame was shown, which starved the audio device, stalled the
 		   clock that frame was waiting on, and deadlocked the player. */
-		need_data = 0;
-		if ( !have_frame )
-			need_data = 1;
-		if ( m.v_ready && m.free_count > 0 )
-			need_data = 1;
-
-		if ( need_data )
+		/* Up to 64 reads a pass, until nothing wants data: in VR a pass is one
+		   headset refresh (xrWaitFrame paces it), and one 8 KB read a refresh
+		   fell behind the film's busy stretches, ran the sound dry and froze
+		   the picture on its clock (Steam Frame). */
+		for ( reads = 0; reads < 64; reads++ )
 		{
-			if ( !movie_read( &m ) && feof( m.f ) )
-				at_eof = 1;
-			while ( ogg_sync_pageout( &m.sync, &pg ) > 0 )
-				movie_page( &m, &pg );
-		}
+			need_data = 0;
+			if ( !have_frame )
+				need_data = 1;
+			if ( m.v_ready && m.free_count > 0 )
+				need_data = 1;
 
-		movie_feed_audio( &m );
-
-		while ( !have_frame && ogg_stream_packetout( &m.t_stream, &pkt ) > 0 )
-		{
-			if ( th_decode_packetin( m.t_dec, &pkt, &gp ) == 0 )
+			if ( need_data && !at_eof )
 			{
-				frame_time = th_granule_time( m.t_dec, gp );
-				have_frame = 1;
+				if ( !movie_read( &m ) && feof( m.f ) )
+					at_eof = 1;
+				while ( ogg_sync_pageout( &m.sync, &pg ) > 0 )
+					movie_page( &m, &pg );
 			}
+
+			movie_feed_audio( &m );
+
+			while ( !have_frame && ogg_stream_packetout( &m.t_stream, &pkt ) > 0 )
+			{
+				if ( th_decode_packetin( m.t_dec, &pkt, &gp ) == 0 )
+				{
+					frame_time = th_granule_time( m.t_dec, gp );
+					have_frame = 1;
+				}
+			}
+
+			if ( !need_data || at_eof )
+				break;
 		}
 
 		/* Finished only when the file is done AND nothing is left to show or
@@ -789,11 +810,21 @@ bool movie_play( const char * path )
 		if ( clock < 0.0 )
 			clock = (double) SDL_GetTicks() / 1000.0 - first_wall;
 
-		if ( have_frame && frame_time <= clock )
+		/* The headset wants a frame on every refresh, not only when the film
+		   has a new one: handed 25 frames a second at 72 or 90 Hz, SteamVR on
+		   the Steam Frame dropped to half rate and the film stuttered. So in
+		   VR the last film frame is submitted again on each refresh between
+		   new ones, and xrWaitFrame paces the loop. */
+		new_frame = have_frame && frame_time <= clock;
+		repeat    = !new_frame && vr_enabled && !vr_headless &&
+		            vr_xr_session_running && m.frames_shown > 0;
+
+		if ( new_frame || repeat )
 		{
 			th_ycbcr_buffer yuv;
+			bool            drawn = repeat;
 
-			if ( th_decode_ycbcr_out( m.t_dec, yuv ) == 0 )
+			if ( new_frame && th_decode_ycbcr_out( m.t_dec, yuv ) == 0 )
 			{
 				double drift = clock - frame_time;
 
@@ -801,7 +832,20 @@ bool movie_play( const char * path )
 				glBindTexture( GL_TEXTURE_2D, m.tex );
 				glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, m.tex_w, m.tex_h,
 					GL_RGBA, GL_UNSIGNED_BYTE, m.rgb );
+				drawn = true;
+				m.frames_shown++;
+				last_progress = (double) SDL_GetTicks() / 1000.0;
 
+				if ( drift < 0.0 ) drift = -drift;
+				drift *= 1000.0;
+				if ( drift > movie_worst_drift_ms )
+					movie_worst_drift_ms = drift;
+			}
+			if ( new_frame )
+				have_frame = 0;
+
+			if ( drawn )
+			{
 				/* Wrap the frame the way RenderLoop() does, or none of this
 				   reaches the headset: movie_play() runs its own loop before
 				   the main one, so without this it draws into the window with
@@ -830,15 +874,7 @@ bool movie_play( const char * path )
 				vr_target_end_frame();
 
 				render_flip( &render_info );
-				m.frames_shown++;
-				last_progress = (double) SDL_GetTicks() / 1000.0;
-
-				if ( drift < 0.0 ) drift = -drift;
-				drift *= 1000.0;
-				if ( drift > movie_worst_drift_ms )
-					movie_worst_drift_ms = drift;
 			}
-			have_frame = 0;
 		}
 		else if ( have_frame )
 		{
@@ -846,8 +882,8 @@ bool movie_play( const char * path )
 		}
 	}
 
-	DebugPrintf( "movie: %d frames shown, worst A/V drift %.1f ms, blockin refused %ld\n",
-		m.frames_shown, movie_worst_drift_ms, m.blockin_refused );
+	DebugPrintf( "movie: %d frames shown, worst A/V drift %.1f ms, blockin refused %ld, sound ran dry %d times\n",
+		m.frames_shown, movie_worst_drift_ms, m.blockin_refused, m.ran_dry );
 
 	movie_cleanup( &m );
 	return m.frames_shown > 0;

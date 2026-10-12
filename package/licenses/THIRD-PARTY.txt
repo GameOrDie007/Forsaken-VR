@@ -40,6 +40,12 @@ ENet 1.3.18
   source:  https://github.com/lsalzman/enet
   text:    ENet.txt
 
+LuaSocket 2.0.2
+  file:    built into projectx.exe
+  licence: MIT
+  source:  https://github.com/lunarmodules/luasocket (2.0.2, from the ForsakenX libs repository)
+  text:    LuaSocket.txt
+
 Lua 5.1.5
   file:    lua51.dll
   licence: MIT

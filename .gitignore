@@ -32,3 +32,6 @@ music/*
 # crash reports the game writes beside itself
 crash.txt
 crash.prev.txt
+
+# the Android build (tools\build-quest.ps1)
+/build/

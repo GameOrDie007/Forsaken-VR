@@ -324,7 +324,7 @@ void probe_frame( void )
 		{
 			GivemeAllWeapons();
 			kit_level = LevelNum;
-			DebugPrintf( "probe: VR test kit -- every weapon for level %d\n", (int) LevelNum );
+			DebugPrintf( "probe: VR test kit, every weapon for level %d\n", (int) LevelNum );
 		}
 		else if ( MyGameStatus != STATUS_SinglePlayer )
 			kit_level = -1;

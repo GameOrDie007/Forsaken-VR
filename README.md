@@ -1,9 +1,9 @@
 # Forsaken VR
 
-Forsaken (1998) in a VR headset: full six-degrees-of-freedom flying, real
-stereo rendering, head tracking, and controller support for the Quest and the
-Steam Frame. You can start a game and play it through without taking the
-headset off.
+Forsaken (1998) in a VR headset, on PC VR or standalone on a Meta Quest 3 or a
+Steam Frame: full six-degrees-of-freedom flying, real stereo rendering, head
+tracking, and controller support for the Quest and the Steam Frame. You can
+start a game and play it through without taking the headset off.
 
 This is a source port, not an injector: OpenXR is built into the game.
 
@@ -13,7 +13,22 @@ This is a source port, not an injector: OpenXR is built into the game.
 
 ## Installing
 
-1. Unzip the download anywhere.
+1. Download `Forsaken VR Installer.exe` from [Releases](../../releases) and
+   double-click it. (Windows may say it protected your PC: choose More info,
+   then Run anyway. The installer is not code-signed.)
+2. Press **INSTALL**.
+3. Connect your headset (Virtual Desktop or SteamVR), then press the big button
+   again (now **PRESS START**), or start **Forsaken VR** from the desktop
+   shortcut or from Steam.
+
+For the standalone version on a Quest 3 or a Steam Frame, see
+[Standalone on Meta Quest 3](#standalone-on-meta-quest-3) and
+[Standalone on Steam Frame](#standalone-on-steam-frame).
+
+### Installing by hand
+
+1. Download `Forsaken-VR-1.1-PCVR.zip` from [Releases](../../releases) and
+   unzip it anywhere.
 2. Run **`Setup.bat`**. It takes a few minutes the first time, and asks one
    question: whether to add Forsaken VR to your Steam library.
 3. Connect your headset (Virtual Desktop or SteamVR), then start **Forsaken VR**
@@ -94,6 +109,42 @@ misbehaves, try it on another runtime first.
 **If the picture judders**, check the wireless link before anything else. On a
 streamed headset a network problem looks just like a slow GPU, and 6 GHz Wi-Fi
 fixed it completely in testing, at full resolution.
+
+---
+
+## Standalone on Meta Quest 3
+
+Forsaken VR also runs on the Quest 3 by itself, with no PC while you play.
+
+1. Download `Forsaken-VR-1.1-Quest.zip` from [Releases](../../releases) and
+   unzip it on your PC.
+2. Turn the headset on, plug it into the PC with a USB-C cable, and
+   double-click **`Setup.bat`**. The first time, put the headset on and allow
+   USB debugging.
+3. On the headset, open **Forsaken VR** from Library, Unknown Sources.
+
+Setup puts the game together on your PC the same way as the PC version (the
+ForsakenX data, and the soundtrack and intro film from your own Forsaken
+Remastered if you have it), installs the app on the headset and copies the
+game over. The headset needs Developer mode, turned on once in the Meta Horizon
+phone app; the Quest download's README walks through it. Run Setup again after
+an update: it copies only what changed and keeps your pilot, saved games and
+settings, with a copy of them on the PC. The Quest version has everything above
+except the observer view.
+
+## Standalone on Steam Frame
+
+The Quest download also runs on a Valve Steam Frame with no PC, under Lepton
+(the Frame's Android layer), installed over Wi-Fi.
+
+1. On the Frame, turn on Developer Mode and set a user password (Settings,
+   Developer), and start **Lepton Development** from its library.
+2. On the PC, double-click **`Setup Steam Frame.bat`** and type the Frame's
+   name (Settings, System, Hostname). It installs the app and copies the game
+   over.
+3. Start it with **`Start on Steam Frame.bat`**.
+
+It runs at 72 Hz, the Frame's rate for standalone games.
 
 ---
 
@@ -215,7 +266,7 @@ Everything VR is in the game's menus, so you can change it in the headset:
 
 - **Pause menu > VR Options**, right under Resume. A short first page with
   **Recenter** and **Play style**, then four pages: **Hands and Aim** (Leftorium,
-  swap sticks, turn speed, auto-level, swivel chair, vibration, ship bob),
+  swap sticks, turn speed, invert pitch, auto-level, swivel chair, vibration, ship bob),
   **HUD and Observer View** (HUD size, HUD on the cockpit, menu screen size and
   distance, world behind menus, rear-view mirror, missile camera, the observer
   view), **Controls** (which button does what, for the controllers in your
@@ -238,6 +289,7 @@ time the game starts.
 |---|---|---|
 | Play style | Modern | See Play style. |
 | Turn speed | 75% | How fast the right stick turns and pitches the ship, as a share of the original game's rate. Lower is gentler on the stomach. |
+| Invert pitch | Off | Stick up puts the nose down and stick down lifts it, the way a flight stick works. The game's own Invert Y only changes the mouse. |
 | Auto-level | On | When you are not rolling, the ship slowly rolls back level, so a turn that mixes yaw and pitch does not leave you tilted. Turn it off to stay at whatever roll you leave the ship in. |
 | Swivel chair | Off | For a chair that turns: turn your body and the ship turns with you, so you fly where you face and the cockpit comes round with you. The right stick still turns the ship too. |
 | Ship bob | On | The gentle drift of a ship at rest, as Probe made it. Turn it off if it bothers you in the headset. |
@@ -329,6 +381,7 @@ VRVignette   = 0       comfort vignette: 0 off, 1 light, 2 strong
 VRShipBob    = true    the idle drift of a ship at rest
 VRSwivel     = false   swivel chair: turning your body turns the ship
 VRAutoLevel  = true    auto-level: the ship rolls back level when you are not rolling
+VRInvertPitch = false  invert pitch: stick up puts the nose down
 VRTurnSpeed  = 75      the right stick's turn rate, % of the original game's (40 to 150)
 VRVibration  = 1       controller vibration: 0 off, 1 on
 VRLeftorium  = false   left-handed controls
@@ -358,6 +411,7 @@ launcher:
 | `-vrshipbob:N` | 1 | 0 = no idle drift. |
 | `-vrswivel:N` | 0 | 1 = swivel chair. |
 | `-vrautolevel:N` | 1 | 0 = no auto-level. |
+| `-vrinvertpitch:N` | 0 | 1 = stick up puts the nose down. |
 | `-vrturnspeed:N` | 75 | The right stick's turn rate, % of the original game's (40 to 150). |
 | `-vrvibration:N` | 1 | Controller vibration: 0 off, 1 on. |
 | `-leftorium:N` | 0 | 1 = left-handed controls. |

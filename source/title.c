@@ -2894,7 +2894,7 @@ MENU	MENU_SelectScreenMode = {
    one long list of options is hard to find your way around in a headset. */
 static bool vrm_worldmenu, vrm_leftorium, vrm_swapsticks, vrm_vibration,
             vrm_intro, vrm_hudanchor, vrm_rear, vrm_missile, vrm_spectator, vrm_bob, vrm_swivel,
-            vrm_autolevel;
+            vrm_autolevel, vrm_invertpitch;
 extern bool RearCameraActive;      /* F6 on a keyboard, which a headset player cannot reach */
 extern bool MissileCameraEnable;   /* F5 */
 
@@ -2926,10 +2926,11 @@ MENU	MENU_VR_Comfort = {
 		{ 200, 128 + ( 0*16 ), 0, 0, 0, "Leftorium (left-handed)", 0, 0, &vrm_leftorium,    VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
 		{ 200, 128 + ( 1*16 ), 0, 0, 0, "Swap sticks",             0, 0, &vrm_swapsticks,   VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
 		{ 200, 128 + ( 2*16 ), 0, 0, 0, "Turn speed",              0, 0, &VRTurnSpeedSlider, VROptionsSliderDone, SelectSlider, DrawVRSlider, NULL, 0 },
-		{ 200, 128 + ( 3*16 ), 0, 0, 0, "Auto-level",              0, 0, &vrm_autolevel,    VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
-		{ 200, 128 + ( 4*16 ), 0, 0, 0, "Swivel chair",            0, 0, &vrm_swivel,       VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
-		{ 200, 128 + ( 5*16 ), 0, 0, 0, "Vibration",               0, 0, &vrm_vibration,    VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
-		{ 200, 128 + ( 6*16 ), 0, 0, 0, "Ship bob",                0, 0, &vrm_bob,          VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
+		{ 200, 128 + ( 3*16 ), 0, 0, 0, "Invert pitch",            0, 0, &vrm_invertpitch,  VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
+		{ 200, 128 + ( 4*16 ), 0, 0, 0, "Auto-level",              0, 0, &vrm_autolevel,    VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
+		{ 200, 128 + ( 5*16 ), 0, 0, 0, "Swivel chair",            0, 0, &vrm_swivel,       VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
+		{ 200, 128 + ( 6*16 ), 0, 0, 0, "Vibration",               0, 0, &vrm_vibration,    VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
+		{ 200, 128 + ( 7*16 ), 0, 0, 0, "Ship bob",                0, 0, &vrm_bob,          VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
 		{ -1 , -1, 0, 0, 0, "" , 0, 0, NULL, NULL , NULL , NULL, NULL, 0 }
 	}
 };
@@ -3026,15 +3027,18 @@ MENU	MENU_VROptions = {
 
 /* The title screen's page: one VDU, like Sound Options, so every setting is on
    it. The title room has no ship to recenter a view for, but the row is kept
-   so a player who sets up at the title can square the room first. */
+   so a player who sets up at the title can square the room first. 22 rows:
+   the heading sits in a shorter box, as on the game's own pages, so the last
+   row still ends at 185, the bottom of the VDU. */
 MENU	MENU_NEW_VROptions = {
 	"", VROptionsLoad, NULL, NULL, 0,
 	{
-		{ 0,    0, 200,  20, 0,           "vr options",              FONT_Medium, TEXTFLAG_CentreX | TEXTFLAG_CentreY, NULL,               NULL,                NULL,                 DrawFlatMenuItem,   NULL, 0 },
-		{ 10,  25, 120,  33, 0,           "recenter",                FONT_Small,  TEXTFLAG_CentreY,                    NULL,               NULL,                VROptionsRecenter,    DrawFlatMenuItem,   NULL, 0 },
-		{ 10,  33, 120,  41, 0,           "controls",                FONT_Small,  TEXTFLAG_CentreY,                    NULL,               &MENU_NEW_VRControls, MenuChange,          DrawFlatMenuItem,   NULL, 0 },
-		{ 10,  41, 120,  49, SLIDER_User, "play style",              FONT_Small,  TEXTFLAG_AutoSelect | TEXTFLAG_CentreY, &VRPlayStyleSlider, VROptionsSliderDone, SelectSlider,      DrawFlatMenuSlider, NULL, 0 },
-		{ 10,  49, 120,  57, SLIDER_User, "turn speed",              FONT_Small,  TEXTFLAG_AutoSelect | TEXTFLAG_CentreY, &VRTurnSpeedSlider, VROptionsSliderDone, SelectSlider,      DrawFlatMenuSlider, NULL, 0 },
+		{ 0,    0, 200,  16, 0,           "vr options",              FONT_Medium, TEXTFLAG_CentreX | TEXTFLAG_CentreY, NULL,               NULL,                NULL,                 DrawFlatMenuItem,   NULL, 0 },
+		{ 10,  17, 120,  25, 0,           "recenter",                FONT_Small,  TEXTFLAG_CentreY,                    NULL,               NULL,                VROptionsRecenter,    DrawFlatMenuItem,   NULL, 0 },
+		{ 10,  25, 120,  33, 0,           "controls",                FONT_Small,  TEXTFLAG_CentreY,                    NULL,               &MENU_NEW_VRControls, MenuChange,          DrawFlatMenuItem,   NULL, 0 },
+		{ 10,  33, 120,  41, SLIDER_User, "play style",              FONT_Small,  TEXTFLAG_AutoSelect | TEXTFLAG_CentreY, &VRPlayStyleSlider, VROptionsSliderDone, SelectSlider,      DrawFlatMenuSlider, NULL, 0 },
+		{ 10,  41, 120,  49, SLIDER_User, "turn speed",              FONT_Small,  TEXTFLAG_AutoSelect | TEXTFLAG_CentreY, &VRTurnSpeedSlider, VROptionsSliderDone, SelectSlider,      DrawFlatMenuSlider, NULL, 0 },
+		{ 10,  49, 120,  57, 0,           "invert pitch",            FONT_Small,  TEXTFLAG_CentreY,                    &vrm_invertpitch,   VROptionsToggled,    SelectFlatMenuToggle, DrawFlatMenuToggle, NULL, 0 },
 		{ 10,  57, 120,  65, 0,           "auto-level",              FONT_Small,  TEXTFLAG_CentreY,                    &vrm_autolevel,     VROptionsToggled,    SelectFlatMenuToggle, DrawFlatMenuToggle, NULL, 0 },
 		{ 10,  65, 120,  73, 0,           "swivel chair",            FONT_Small,  TEXTFLAG_CentreY,                    &vrm_swivel,        VROptionsToggled,    SelectFlatMenuToggle, DrawFlatMenuToggle, NULL, 0 },
 		{ 10,  73, 120,  81, 0,           "ship bob",                FONT_Small,  TEXTFLAG_CentreY,                    &vrm_bob,           VROptionsToggled,    SelectFlatMenuToggle, DrawFlatMenuToggle, NULL, 0 },
@@ -9702,6 +9706,11 @@ bool         vr_ship_bob = true;    /* VRShipBob: the idle drift, as Probe made 
 static bool  vr_cfg_swivel = false; /* VRSwivel, as saved: -vrswivel:N is for this run only */
 bool         vr_auto_level = true;  /* the game's auto-level in VR (ships.c AutoLevelRot) */
 static bool  vr_cfg_autolevel = true; /* VRAutoLevel, as saved: -vrautolevel:N is for this run only */
+/* VRInvertPitch: stick up puts the nose down, the flight-sim way. The game's
+   own Invert Y only reaches the mouse. Off by default, like Invert Y. */
+#define VR_INVERT_PITCH_DEFAULT false
+bool         vr_invert_pitch = VR_INVERT_PITCH_DEFAULT;
+static bool  vr_cfg_invertpitch = VR_INVERT_PITCH_DEFAULT; /* as saved: -vrinvertpitch:N is for this run only */
 int          vr_turn_speed = 75;    /* VRTurnSpeed: the right stick's turn rate, % of the game's */
 static int   vr_cfg_turn   = 75;
 bool         vr_play_style_force = false;   /* -askplaystyle: ask even in a desk run */
@@ -9737,6 +9746,7 @@ static void WriteVRPrefs( void )
 	config_set_bool ( "VRShipBob",    vr_ship_bob );
 	config_set_bool ( "VRSwivel",     vr_cfg_swivel );
 	config_set_bool ( "VRAutoLevel",  vr_cfg_autolevel );
+	config_set_bool ( "VRInvertPitch", vr_cfg_invertpitch );
 	config_set_int  ( "VRTurnSpeed",  vr_cfg_turn );
 	config_save();
 }
@@ -9763,6 +9773,7 @@ void VROptionsLoad( MENU * Menu )
 	vrm_bob        = vr_ship_bob;
 	vrm_swivel     = vr_swivel;
 	vrm_autolevel  = vr_auto_level;
+	vrm_invertpitch = vr_invert_pitch;
 
 	VRVignetteSlider.value  = vr_clampi( vr_vignette, 0, 2 );
 	VRTurnSpeedSlider.value = vr_clampi( vr_turn_speed, 40, 150 );
@@ -9789,6 +9800,8 @@ void VROptionsToggled( MENUITEM * Item )
 		vr_ship_bob = vrm_bob;
 	else if( v == &vrm_autolevel )
 		vr_auto_level = vr_cfg_autolevel = vrm_autolevel;
+	else if( v == &vrm_invertpitch )
+		vr_invert_pitch = vr_cfg_invertpitch = vrm_invertpitch;
 	else if( v == &vrm_swivel )
 		vr_swivel = vr_cfg_swivel = vrm_swivel;
 	else if( v == &vrm_spectator )
@@ -10313,12 +10326,16 @@ void GetGamePrefs( void )
 	vr_vignette    = config_get_int  ( "VRVignette",   0     );
 	vr_vibration   = config_get_int  ( "VRVibration",  1     );
 	vr_spectator   = config_get_bool ( "VRSpectator",  true  );
+#ifdef __ANDROID__
+	vr_spectator   = false;	/* no monitor on a standalone headset: no observer view */
+#endif
 	vr_observer_windowed = config_get_bool( "VRObserverWindowed", false );
 	vr_aim_mode    = config_get_int  ( "VRPlayStyle",  1     ) ? 1 : 0;
 	vr_play_style_asked = config_get_bool( "VRPlayStyleAsked", false );
 	vr_ship_bob    = config_get_bool ( "VRShipBob",    true  );
 	vr_swivel      = vr_cfg_swivel = config_get_bool( "VRSwivel", false );
 	vr_auto_level  = vr_cfg_autolevel = config_get_bool( "VRAutoLevel", true );
+	vr_invert_pitch = vr_cfg_invertpitch = config_get_bool( "VRInvertPitch", VR_INVERT_PITCH_DEFAULT );
 	vr_turn_speed  = vr_cfg_turn   = config_get_int ( "VRTurnSpeed", 75 );
 	if( vr_turn_speed < 40 || vr_turn_speed > 150 ) vr_turn_speed = vr_cfg_turn = 75;
 	vrb_load();   /* the Controls page's maps (vr_binds.c) */
@@ -13510,34 +13527,34 @@ void InitScreenFonts (void)
 		TextLookup[font][']'] = 7 + offset;
 
 		// foreign characters...
-		TextLookup[font][(u_int8_t)'�'] = 56 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 56 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 56 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 57 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 57 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 58 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 58 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 59 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 59 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 60 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 60 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 61 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 62 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 63 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 63 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 64 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 64 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 65 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 65 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 66 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 66 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 67 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 67 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 68 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 68 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 69 + offset; 
-		TextLookup[font][(u_int8_t)'�'] = 69 + offset;
-		TextLookup[font][(u_int8_t)'�'] = TextLookup[font][(u_int8_t)'B'];
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 56 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 56 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 56 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 57 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 57 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 58 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 58 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 59 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 59 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 60 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 60 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 61 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 62 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 63 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 63 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 64 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 64 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 65 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 65 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 66 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 66 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 67 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 67 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 68 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 68 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 69 + offset; 
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 69 + offset;
+		TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = TextLookup[font][(u_int8_t)'B'];
 		
 /*
   128  � ( 199 )  144  � ( 201 )  160  � ( 225 )   
@@ -13569,60 +13586,60 @@ void InitScreenFonts (void)
 			TextLookup[font][96] = 228; // apostrophe
 			TextLookup[font][','] = 231; // comma
 
-			TextLookup[font][(u_int8_t)'�'] = 234;
-			TextLookup[font][(u_int8_t)'�'] = 237;
-			TextLookup[font][(u_int8_t)'�'] = 240;
-			TextLookup[font][(u_int8_t)'�'] = 240;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 234;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 237;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 240;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 240;
 
-			TextLookup[font][(u_int8_t)'�'] = 243;
-			TextLookup[font][(u_int8_t)'�'] = 246;
-			TextLookup[font][(u_int8_t)'�'] = 249;
-			TextLookup[font][(u_int8_t)'�'] = 252;
-			TextLookup[font][(u_int8_t)'�'] = 255;
-			TextLookup[font][(u_int8_t)'�'] = 258;
-			TextLookup[font][(u_int8_t)'�'] = 258;
-			TextLookup[font][(u_int8_t)'�'] = 261;
-			TextLookup[font][(u_int8_t)'�'] = 264;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 243;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 246;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 249;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 252;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 255;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 258;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 258;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 261;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 264;
 			break;
 		case FONT_512X384_Medium:
 			TextLookup[font][39] = 227; // apostrophe
 			TextLookup[font][96] = 227; // apostrophe
 			TextLookup[font][','] = 230; // comma
 
-			TextLookup[font][(u_int8_t)'�'] = 233;
-			TextLookup[font][(u_int8_t)'�'] = 236;
-			TextLookup[font][(u_int8_t)'�'] = 239;
-			TextLookup[font][(u_int8_t)'�'] = 239;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 233;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 236;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 239;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 239;
 
-			TextLookup[font][(u_int8_t)'�'] = 242;
-			TextLookup[font][(u_int8_t)'�'] = 245;
-			TextLookup[font][(u_int8_t)'�'] = 248;
-			TextLookup[font][(u_int8_t)'�'] = 251;
-			TextLookup[font][(u_int8_t)'�'] = 254;
-			TextLookup[font][(u_int8_t)'�'] = 257;
-			TextLookup[font][(u_int8_t)'�'] = 257;
-			TextLookup[font][(u_int8_t)'�'] = 260;
-			TextLookup[font][(u_int8_t)'�'] = 263;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 242;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 245;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 248;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 251;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 254;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 257;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 257;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 260;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 263;
 			break;
 		case FONT_512X384_Large:
 			TextLookup[font][39] = 226; // apostrophe
 			TextLookup[font][96] = 226; // apostrophe
 			TextLookup[font][','] = 229; // comma
 
-			TextLookup[font][(u_int8_t)'�'] = 232;
-			TextLookup[font][(u_int8_t)'�'] = 235;
-			TextLookup[font][(u_int8_t)'�'] = 238;
-			TextLookup[font][(u_int8_t)'�'] = 238;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 232;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 235;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 238;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 238;
 
-			TextLookup[font][(u_int8_t)'�'] = 241;
-			TextLookup[font][(u_int8_t)'�'] = 244;
-			TextLookup[font][(u_int8_t)'�'] = 247;
-			TextLookup[font][(u_int8_t)'�'] = 250;
-			TextLookup[font][(u_int8_t)'�'] = 253;
-			TextLookup[font][(u_int8_t)'�'] = 256;
-			TextLookup[font][(u_int8_t)'�'] = 256;
-			TextLookup[font][(u_int8_t)'�'] = 259;
-			TextLookup[font][(u_int8_t)'�'] = 262;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 241;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 244;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 247;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 250;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 253;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 256;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 256;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 259;
+			TextLookup[font][(u_int8_t)0xBD /* was a mangled accented letter; GCC made it 0xBD too */] = 262;
 			break;
 		}
 	}
@@ -17368,8 +17385,17 @@ void ProcessSelect( int Key )
 	/* go back */
 	/* escape, right click */
 	else if ( Key == SDLK_ESCAPE || Key == RIGHT_MOUSE )
-
-		MenuBack();
+	{
+		/* An error message turns the menus' entry and exit functions off
+		   until its OK clears them again (MenuItemBackFromError). Backing out
+		   of it with Escape left them off for the rest of the session: the
+		   pilot portrait was never removed and no game could be started.
+		   In VR, B and the menu button send Escape. */
+		if ( CurrentMenu == &MENU_NEW_Error )
+			MenuItemBackFromError( NULL );
+		else
+			MenuBack();
+	}
 
 	/* select */
 	/* enter, left mouse */

@@ -20,7 +20,7 @@ extern render_info_t render_info;
 extern GLenum render_last_gl_error;
 
 // TODO invalid pointer
-#if defined(MACOSX) && SDL_VERSION_ATLEAST(2,0,0)
+#if ( defined(MACOSX) && SDL_VERSION_ATLEAST(2,0,0) ) || defined(GLES)
 #define gluErrorString(e)\
 	(e == 0x0500 ? "invalid enumerant" : \
 	(e == 0x0501 ? "invalid value" : \

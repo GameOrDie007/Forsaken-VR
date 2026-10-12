@@ -1,0 +1,7 @@
+# built or machine-local
+app/libs/
+app/build/
+build/
+.gradle/
+local.properties
+app/src/main/assets/vrsplash.png

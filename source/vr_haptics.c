@@ -67,7 +67,7 @@ static void pulse( int hand, float amp, int ms, const char * why )
 
 	vr_haptics_pulses++;
 	if( vr_haptics_log )
-		DebugPrintf( "vr: haptic %-5s %.2f %3d ms %s -- %s\n",
+		DebugPrintf( "vr: haptic %-5s %.2f %3d ms %s: %s\n",
 		             hand == HAND_LEFT ? "LEFT" : "RIGHT", amp, ms,
 		             sent ? "sent" : "not sent (no session)", why );
 }

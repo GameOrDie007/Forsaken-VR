@@ -73,14 +73,31 @@ float vr_hud_half_tan_x( void )
 
 #include "gl_headers.h"
 
-#ifdef _WIN32
-  #include <windows.h>
-  #define XR_USE_PLATFORM_WIN32
+#ifdef __ANDROID__
+  /* Quest and Steam Frame standalone: OpenGL ES 3 on EGL. The build defines
+     XR_USE_PLATFORM_ANDROID and XR_USE_GRAPHICS_API_OPENGL_ES. */
+  #include <jni.h>
+  #include <EGL/egl.h>
+#else
+  #ifdef _WIN32
+    #include <windows.h>
+    #define XR_USE_PLATFORM_WIN32
+  #endif
+  #define XR_USE_GRAPHICS_API_OPENGL
 #endif
-#define XR_USE_GRAPHICS_API_OPENGL
 
 #include <openxr/openxr.h>
 #include <openxr/openxr_platform.h>
+
+#ifdef __ANDROID__
+typedef XrSwapchainImageOpenGLESKHR vr_swap_image_t;
+#define VR_SWAP_IMAGE_TYPE   XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_ES_KHR
+#define VR_GL_EXT            XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME
+#else
+typedef XrSwapchainImageOpenGLKHR vr_swap_image_t;
+#define VR_SWAP_IMAGE_TYPE   XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_KHR
+#define VR_GL_EXT            XR_KHR_OPENGL_ENABLE_EXTENSION_NAME
+#endif
 
 #include <string.h>
 #include <math.h>
@@ -331,7 +348,7 @@ void vr_hand_swap_selftest( bool sabotage )
 	vrb_frame = keep_frame;
 	vrb_force_defaults = keep_defaults;
 	DebugPrintf( "handtest%s: %d of %d checks failed\n",
-	             sabotage ? " (sabotaged -- these SHOULD fail)" : "", fails, checks );
+	             sabotage ? " (sabotaged: these SHOULD fail)" : "", fails, checks );
 }
 
 /* Headless dumps for -fakeeye: when set for one frame, each eye and the panel
@@ -530,7 +547,7 @@ static XrSpace         xr_aim_space[2] = { XR_NULL_HANDLE, XR_NULL_HANDLE };   /
 static XrSessionState  xr_state   = XR_SESSION_STATE_UNKNOWN;
 
 static XrSwapchain     xr_swapchain[VR_MAX_EYES]   = { XR_NULL_HANDLE, XR_NULL_HANDLE };
-static XrSwapchainImageOpenGLKHR * xr_images[VR_MAX_EYES] = { NULL, NULL };
+static vr_swap_image_t * xr_images[VR_MAX_EYES] = { NULL, NULL };
 static uint32_t        xr_image_count[VR_MAX_EYES] = { 0, 0 };
 static int             xr_sc_width = 0, xr_sc_height = 0;
 
@@ -539,7 +556,7 @@ static int             xr_sc_width = 0, xr_sc_height = 0;
    in world space: correct stereo, depth and perspective, and it stays put
    because the runtime places it in the world rather than in the view. */
 static XrSwapchain     xr_quad_swapchain = XR_NULL_HANDLE;
-static XrSwapchainImageOpenGLKHR * xr_quad_images = NULL;
+static vr_swap_image_t * xr_quad_images = NULL;
 static uint32_t        xr_quad_image_count = 0;
 static int             xr_quad_w = 2048, xr_quad_h = 1536;   /* 4:3 */
 static bool            xr_quad_ready = false;
@@ -575,7 +592,60 @@ static GLuint xr_blit_fbo = 0;
 
 // The loader only guarantees the core entry points; extension functions have
 // to be fetched through xrGetInstanceProcAddr.
+#ifdef __ANDROID__
+static PFN_xrGetOpenGLESGraphicsRequirementsKHR pfn_get_gl_requirements = NULL;
+#define VR_GL_REQ_FN "xrGetOpenGLESGraphicsRequirementsKHR"
+
+static const char * xr_str( XrResult r );
+
+/* The Java VM and the activity, from SDL2, which runs the app. Android's
+   OpenXR loader is told about them before anything else. */
+static JavaVM * vr_android_vm = NULL;
+static jobject  vr_android_activity = NULL;
+static bool     vr_android_loader_ready = false;
+
+static bool vr_android_loader_init( void )
+{
+	PFN_xrInitializeLoaderKHR init = NULL;
+	XrLoaderInitInfoAndroidKHR li = { XR_TYPE_LOADER_INIT_INFO_ANDROID_KHR };
+	JNIEnv * env;
+	jobject act;
+	XrResult r;
+
+	if( vr_android_loader_ready )
+		return true;
+	env = (JNIEnv *) SDL_AndroidGetJNIEnv();
+	act = (jobject) SDL_AndroidGetActivity();
+	if( !env || !act )
+	{
+		Msg( "openxr: no Java VM or activity from SDL\n" );
+		return false;
+	}
+	(*env)->GetJavaVM( env, &vr_android_vm );
+	vr_android_activity = (*env)->NewGlobalRef( env, act );
+	(*env)->DeleteLocalRef( env, act );
+
+	r = xrGetInstanceProcAddr( XR_NULL_HANDLE, "xrInitializeLoaderKHR", (PFN_xrVoidFunction *) &init );
+	if( XR_FAILED( r ) || !init )
+	{
+		Msg( "openxr: the OpenXR loader has no Android start-up\n" );
+		return false;
+	}
+	li.applicationVM      = vr_android_vm;
+	li.applicationContext = vr_android_activity;
+	r = init( (const XrLoaderInitInfoBaseHeaderKHR *) &li );
+	if( XR_FAILED( r ) )
+	{
+		Msg( "openxr: xrInitializeLoaderKHR failed: %s\n", xr_str(r) );
+		return false;
+	}
+	vr_android_loader_ready = true;
+	return true;
+}
+#else
 static PFN_xrGetOpenGLGraphicsRequirementsKHR pfn_get_gl_requirements = NULL;
+#define VR_GL_REQ_FN "xrGetOpenGLGraphicsRequirementsKHR"
+#endif
 
 // Turns an XrResult into something readable. xrResultToString needs a live
 // instance, and the most interesting failures happen before we have one, so
@@ -660,7 +730,7 @@ static bool log_available_extensions( bool * out_has_opengl )
 		DebugPrintf( "openxr:   %s (v%u)\n",
 		             props[i].extensionName, props[i].extensionVersion );
 
-	*out_has_opengl = has_extension( props, count, XR_KHR_OPENGL_ENABLE_EXTENSION_NAME );
+	*out_has_opengl = has_extension( props, count, VR_GL_EXT );
 	/* Requesting an extension the runtime lacks fails xrCreateInstance
 	   outright, so the Frame's profile is asked for only when it is listed. */
 	xr_has_frame_ext = has_extension( props, count, XR_VALVE_FRAME_EXT );
@@ -810,10 +880,16 @@ bool vr_openxr_init( void )
 	XrInstanceProperties       instprop = { XR_TYPE_INSTANCE_PROPERTIES };
 	XrSystemGetInfo            sysget   = { XR_TYPE_SYSTEM_GET_INFO };
 	XrSystemProperties         sysprop  = { XR_TYPE_SYSTEM_PROPERTIES };
+#ifdef __ANDROID__
+	XrGraphicsRequirementsOpenGLESKHR glreq = { XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_ES_KHR };
+	XrInstanceCreateInfoAndroidKHR aci = { XR_TYPE_INSTANCE_CREATE_INFO_ANDROID_KHR };
+#else
 	XrGraphicsRequirementsOpenGLKHR glreq = { XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR };
+#endif
 	XrViewConfigurationView    views[2];
 	XrEnvironmentBlendMode     blend[8];
-	const char *               enabled_ext[2];
+	const char *               enabled_ext[3];
+	uint32_t                   ext_count = 0;
 	uint32_t                   view_count = 0, blend_count = 0, i;
 	bool                       has_opengl = false;
 	XrResult                   r;
@@ -825,6 +901,14 @@ bool vr_openxr_init( void )
 
 	pick_runtime();
 
+#ifdef __ANDROID__
+	if( !vr_android_loader_init() )
+	{
+		snprintf( vr_flat_reason, sizeof(vr_flat_reason), "the OpenXR loader would not start" );
+		goto fail;
+	}
+#endif
+
 retry_runtime:
 	if( !log_available_extensions( &has_opengl ) )
 		goto fail;
@@ -832,18 +916,26 @@ retry_runtime:
 	if( !has_opengl )
 	{
 		Msg( "openxr: the runtime does not support %s, which we need to hand "
-		     "it OpenGL textures.\n", XR_KHR_OPENGL_ENABLE_EXTENSION_NAME );
+		     "it OpenGL textures.\n", VR_GL_EXT );
 		goto fail;
 	}
 
-	enabled_ext[0] = XR_KHR_OPENGL_ENABLE_EXTENSION_NAME;
-	enabled_ext[1] = XR_VALVE_FRAME_EXT;
+	ext_count = 0;
+	enabled_ext[ext_count++] = VR_GL_EXT;
+#ifdef __ANDROID__
+	enabled_ext[ext_count++] = XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME;
+	aci.applicationVM       = vr_android_vm;
+	aci.applicationActivity = vr_android_activity;
+	create.next             = &aci;
+#endif
+	if( xr_has_frame_ext )
+		enabled_ext[ext_count++] = XR_VALVE_FRAME_EXT;
 
 	strcpy( create.applicationInfo.applicationName, "Forsaken VR" );
 	strcpy( create.applicationInfo.engineName,      "ProjectX" );
 	create.applicationInfo.applicationVersion = 1;
 	create.applicationInfo.engineVersion      = 1;
-	create.enabledExtensionCount              = xr_has_frame_ext ? 2 : 1;
+	create.enabledExtensionCount              = ext_count;
 	if( xr_has_frame_ext )
 		DebugPrintf( "openxr: Steam Frame controller profile available (%s)\n", XR_VALVE_FRAME_EXT );
 	create.enabledExtensionNames              = enabled_ext;
@@ -901,7 +993,7 @@ retry_runtime:
 	if( XR_FAILED( r ) )
 	{
 		Msg( "openxr: no head-mounted system available: %s\n", xr_str(r) );
-		snprintf( vr_flat_reason, sizeof(vr_flat_reason), "no headset available (%s) -- is it connected and streaming?", xr_str(r) );
+		snprintf( vr_flat_reason, sizeof(vr_flat_reason), "no headset available (%s). Is it connected and streaming?", xr_str(r) );
 		Msg( "openxr: check the headset is connected before launching: for a "
 		     "Steam Frame, SteamVR running; for a Quest, Virtual Desktop streaming.\n" );
 		goto fail;
@@ -922,7 +1014,7 @@ retry_runtime:
 
 	// What OpenGL version does the runtime demand? This is the check most
 	// likely to bite: our context is 3.2 core, and some runtimes require 4.x.
-	r = xrGetInstanceProcAddr( xr_instance, "xrGetOpenGLGraphicsRequirementsKHR",
+	r = xrGetInstanceProcAddr( xr_instance, VR_GL_REQ_FN,
 	                           (PFN_xrVoidFunction *) &pfn_get_gl_requirements );
 	if( XR_SUCCEEDED( r ) && pfn_get_gl_requirements )
 	{
@@ -941,7 +1033,7 @@ retry_runtime:
 			DebugPrintf( "openxr: graphics requirements query failed: %s\n", xr_str(r) );
 	}
 	else
-		DebugPrintf( "openxr: xrGetOpenGLGraphicsRequirementsKHR unavailable\n" );
+		DebugPrintf( "openxr: %s unavailable\n", VR_GL_REQ_FN );
 
 	// Per-eye render resolution the runtime would like us to use.
 	for( i = 0; i < 2; i++ )
@@ -1094,9 +1186,28 @@ static bool create_swapchains( void )
 	// and washes the image out, which is exactly what we saw in the headset.
 	// Declaring sRGB lets it decode correctly. (Phase 3b originally chose
 	// RGBA8 on the opposite, and wrong, reasoning.)
+#ifdef __ANDROID__
+	// OpenGL ES encodes every write to an sRGB image, which would encode the
+	// engine's already-encoded bytes a second time. GL_EXT_sRGB_write_control
+	// turns that off; without it the plain RGBA8 swapchain is the right one.
+	{
+		const char * glext = (const char *) glGetString( GL_EXTENSIONS );
+		bool write_control = glext && strstr( glext, "GL_EXT_sRGB_write_control" ) != NULL;
+		if( write_control )
+		{
+			for( i = 0; i < format_count && !chosen; i++ )
+				if( formats[i] == GL_SRGB8_ALPHA8 )
+					chosen = formats[i];
+			if( chosen )
+				glDisable( 0x8DB9 );	/* GL_FRAMEBUFFER_SRGB_EXT: copy the bytes as they are */
+		}
+		DebugPrintf( "openxr: sRGB write control %s\n", write_control ? "yes" : "no" );
+	}
+#else
 	for( i = 0; i < format_count && !chosen; i++ )
 		if( formats[i] == GL_SRGB8_ALPHA8 )
 			chosen = formats[i];
+#endif
 	if( !chosen )
 		for( i = 0; i < format_count && !chosen; i++ )
 			if( formats[i] == GL_RGBA8 )
@@ -1139,14 +1250,14 @@ static bool create_swapchains( void )
 			Msg( "openxr: no swapchain images for eye %d: %s\n", eye, xr_str(r) );
 			return false;
 		}
-		xr_images[eye] = (XrSwapchainImageOpenGLKHR *)
-		                 malloc( n * sizeof(XrSwapchainImageOpenGLKHR) );
+		xr_images[eye] = (vr_swap_image_t *)
+		                 malloc( n * sizeof(vr_swap_image_t) );
 		if( !xr_images[eye] )
 			return false;
 		for( j = 0; j < n; j++ )
 		{
 			memset( &xr_images[eye][j], 0, sizeof(xr_images[eye][j]) );
-			xr_images[eye][j].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_KHR;
+			xr_images[eye][j].type = VR_SWAP_IMAGE_TYPE;
 		}
 		r = xrEnumerateSwapchainImages( xr_swapchain[eye], n, &n,
 		        (XrSwapchainImageBaseHeader *) xr_images[eye] );
@@ -1179,14 +1290,14 @@ static bool create_swapchains( void )
 		if( XR_SUCCEEDED( xrCreateSwapchain( xr_session, &sci, &xr_quad_swapchain ) ) &&
 		    XR_SUCCEEDED( xrEnumerateSwapchainImages( xr_quad_swapchain, 0, &n, NULL ) ) && n )
 		{
-			xr_quad_images = (XrSwapchainImageOpenGLKHR *)
-			                 malloc( n * sizeof(XrSwapchainImageOpenGLKHR) );
+			xr_quad_images = (vr_swap_image_t *)
+			                 malloc( n * sizeof(vr_swap_image_t) );
 			if( xr_quad_images )
 			{
 				for( j = 0; j < n; j++ )
 				{
 					memset( &xr_quad_images[j], 0, sizeof(xr_quad_images[j]) );
-					xr_quad_images[j].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_KHR;
+					xr_quad_images[j].type = VR_SWAP_IMAGE_TYPE;
 				}
 				if( XR_SUCCEEDED( xrEnumerateSwapchainImages( xr_quad_swapchain, n, &n,
 				        (XrSwapchainImageBaseHeader *) xr_quad_images ) ) )
@@ -1463,7 +1574,7 @@ static void detect_profile( void )
 		xrPathToString( xr_instance, st.interactionProfile, sizeof(name), &len, name );
 	vrb_frame = strstr( name, "frame_controller" ) != NULL;
 	DebugPrintf( "openxr: right hand bound to %s%s\n", name[0] ? name : "(nothing yet)",
-	             vrb_frame ? " -- the Steam Frame's controls" : "" );
+	             vrb_frame ? " (the Steam Frame's controls)" : "" );
 	if( name[0] )
 	{
 		/* which physical buttons the runtime gave the menu action: a runtime
@@ -1475,7 +1586,7 @@ static void detect_profile( void )
 		if( XR_FAILED( xrEnumerateBoundSourcesForAction( xr_session, &ei, 8, &n, src ) ) )
 			DebugPrintf( "openxr: menu button: the runtime did not say what it is bound to\n" );
 		else if( !n )
-			DebugPrintf( "openxr: menu button: bound to NOTHING -- the menu cannot be opened from the controllers\n" );
+			DebugPrintf( "openxr: menu button: the runtime listed no buttons for it (Meta's never does; the presses below say if it works)\n" );
 		for( i = 0; i < n && i < 8; i++ )
 		{
 			char s[XR_MAX_PATH_LENGTH];
@@ -1652,7 +1763,11 @@ bool vr_openxr_start_session( void )
 {
 	if( vr_headless ) return false;
 
+#ifdef __ANDROID__
+	XrGraphicsBindingOpenGLESAndroidKHR gb = { XR_TYPE_GRAPHICS_BINDING_OPENGL_ES_ANDROID_KHR };
+#else
 	XrGraphicsBindingOpenGLWin32KHR gb = { XR_TYPE_GRAPHICS_BINDING_OPENGL_WIN32_KHR };
+#endif
 	XrSessionCreateInfo             sci = { XR_TYPE_SESSION_CREATE_INFO };
 	XrReferenceSpaceCreateInfo      rsci = { XR_TYPE_REFERENCE_SPACE_CREATE_INFO };
 	XrResult                        r;
@@ -1660,6 +1775,27 @@ bool vr_openxr_start_session( void )
 	if( !vr_enabled || !vr_xr_ready )
 		return false;
 
+#ifdef __ANDROID__
+	// The runtime needs the EGL context we render with, and its config.
+	{
+		EGLint cfg_id = 0, n = 0;
+		EGLint attr[] = { EGL_CONFIG_ID, 0, EGL_NONE };
+		gb.display = eglGetCurrentDisplay();
+		gb.context = eglGetCurrentContext();
+		if( gb.display == EGL_NO_DISPLAY || gb.context == EGL_NO_CONTEXT )
+		{
+			Msg( "openxr: no current EGL context to bind\n" );
+			goto fail;
+		}
+		eglQueryContext( gb.display, gb.context, EGL_CONFIG_ID, &cfg_id );
+		attr[1] = cfg_id;
+		if( !eglChooseConfig( gb.display, attr, &gb.config, 1, &n ) || n < 1 )
+		{
+			Msg( "openxr: could not find the EGL config (id %d)\n", (int) cfg_id );
+			goto fail;
+		}
+	}
+#else
 	// The runtime needs the actual WGL context we render with. It must be
 	// current on this thread at this point.
 	gb.hDC   = wglGetCurrentDC();
@@ -1670,6 +1806,7 @@ bool vr_openxr_start_session( void )
 		     (void*) gb.hDC, (void*) gb.hGLRC );
 		goto fail;
 	}
+#endif
 
 	sci.next     = &gb;
 	sci.systemId = xr_system;
@@ -1713,7 +1850,7 @@ bool vr_openxr_start_session( void )
 	return true;
 
 fail:
-	Msg( "openxr: session start failed -- continuing without VR.\n" );
+	Msg( "openxr: session start failed, continuing without VR.\n" );
 	vr_enabled = false;
 	return false;
 }
@@ -1736,7 +1873,7 @@ static void handle_state_change( XrSessionState state )
 			else
 			{
 				vr_xr_session_running = true;
-				DebugPrintf( "openxr: session begun -- submitting frames\n" );
+				DebugPrintf( "openxr: session begun, submitting frames\n" );
 			}
 		}
 		break;

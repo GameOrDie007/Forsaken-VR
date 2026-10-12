@@ -1,7 +1,12 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <time.h>
+#ifdef __ANDROID__
+#include <sys/time.h>	/* bionic has no ftime() */
+#include <unistd.h>	/* getcwd, for convert_path */
+#else
 #include <sys/timeb.h>
+#endif
 #include "main.h"
 #include "file.h"
 #include "util.h"
@@ -64,6 +69,53 @@ static void prune_old_logs( int keep )
 		HeapFree( GetProcessHeap(), 0, all );
 	}
 }
+#elif defined(__ANDROID__)
+/* The same on the headsets, where a log is written on every run too. */
+#include <dirent.h>
+#include <sys/stat.h>
+typedef struct { char name[32]; time_t mtime; } dated_log_t;
+static int log_name_cmp( const void * a, const void * b )
+{
+	const dated_log_t * x = (const dated_log_t *) a, * y = (const dated_log_t *) b;
+	return ( y->mtime > x->mtime ) - ( y->mtime < x->mtime );   /* newest first */
+}
+static bool is_dated_log( const char * n )
+{
+	return strlen( n ) == 21 && n[2] == '-' && n[5] == '-' && n[8] == ' ' &&
+	       n[11] == '.' && n[14] == '.' && !strcasecmp( n + 17, ".txt" );
+}
+static void prune_old_logs( int keep )
+{
+	static dated_log_t all[256];
+	char dir[500], path[600];
+	struct dirent * e;
+	struct stat st;
+	int n = 0, i;
+	DIR * d;
+	strncpy( dir, convert_path( "Logs" ), sizeof(dir) - 1 );
+	dir[sizeof(dir) - 1] = 0;
+	d = opendir( dir );
+	if( !d )
+		return;
+	while( n < 256 && ( e = readdir( d ) ) != NULL )
+	{
+		if( !is_dated_log( e->d_name ) )
+			continue;
+		snprintf( path, sizeof(path), "%s/%s", dir, e->d_name );
+		if( stat( path, &st ) != 0 )
+			continue;
+		strcpy( all[n].name, e->d_name );
+		all[n].mtime = st.st_mtime;
+		n++;
+	}
+	closedir( d );
+	qsort( all, n, sizeof(all[0]), log_name_cmp );
+	for( i = keep; i < n; i++ )
+	{
+		snprintf( path, sizeof(path), "%s/%s", dir, all[i].name );
+		unlink( path );
+	}
+}
 #else
 static void prune_old_logs( int keep ) { (void) keep; }
 #endif
@@ -95,6 +147,20 @@ char* convert_path( char* _str )
 #else
 	static char temp[500];
 	char * str = temp;
+#ifdef __ANDROID__
+	/* SDL_RWFromFile reads a relative path from inside the app's package (its
+	   assets), not from storage, so the sound effects never loaded on the
+	   headset. Every path the game opens starts from its folder instead. */
+	if ( _str[0] != '/' && getcwd( temp, sizeof(temp) - 2 ) )
+	{
+		size_t n = strlen( temp );
+		temp[n++] = '/';
+		strncpy( temp + n, _str, sizeof(temp) - n - 1 );
+		temp[sizeof(temp) - 1] = 0;
+		str = temp + n;	/* only the game's part is converted below */
+	}
+	else
+#endif
 	strncpy( temp, _str, sizeof(temp) );
 	while (*str)
 	{
@@ -202,10 +268,17 @@ void DebugPrintf( const char * format, ... ) // timestamp prefix
 	if( !Debug && !DebugLog )
 		return;
 
+#ifdef __ANDROID__
+	struct timeval now;
+	gettimeofday(&now, NULL);
+	sprintf( buf, "%ld.%.3d ",
+		(long) now.tv_sec, (int)( now.tv_usec / 1000 ));
+#else
 	struct timeb now;
 	ftime(&now);
 	sprintf( buf, "%ld.%.3d ",
 		now.time, now.millitm);
+#endif
 
 	buf2 = strchr(buf,0);
 	buf_length = sizeof(buf)-strlen(buf);

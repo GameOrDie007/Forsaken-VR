@@ -266,7 +266,35 @@ bool draw_render_object( RENDEROBJECT *renderObject, int primitive_type, bool or
 				glBindTexture( GL_TEXTURE_2D, texdata->id );
 			}
 		}
+#ifdef GLES
+		// OpenGL ES has base-vertex draws only from 3.2, and some headsets'
+		// drivers (and the desk emulator) stop at 3.1: start the vertex
+		// attributes at the group's first vertex instead, then draw plainly.
+		{
+			GLsizei stride = orthographic ? sizeof(TLVERTEX) : sizeof(LVERTEX);
+			int a;
+			glBindBuffer( GL_ARRAY_BUFFER, renderObject->lpVertexBuffer );
+			for ( a = 0; attr[a].name; a++ )
+			{
+				loc = glGetAttribLocation( current_program, attr[a].name );
+				if ( loc >= 0 )
+					glVertexAttribPointer( loc, attr[a].components, attr[a].type, attr[a].normalized, stride,
+						(const char *) 0 + attr[a].offset + (size_t) group->startVert * stride );
+			}
+			if ( renderObject->lpNormalBuffer )
+			{
+				glBindBuffer( GL_ARRAY_BUFFER, renderObject->lpNormalBuffer );
+				loc = glGetAttribLocation( current_program, "vnormal" );
+				if ( loc >= 0 )
+					glVertexAttribPointer( loc, 3, GL_FLOAT, GL_FALSE, sizeof(NORMAL),
+						(const char *) 0 + (size_t) group->startVert * sizeof(NORMAL) );
+			}
+			glDrawElements( primitive_type, group->numTriangles * 3, GL_UNSIGNED_SHORT,
+				(const char *) 0 + group->startIndex * sizeof(WORD) );
+		}
+#else
 		glDrawElementsBaseVertex( primitive_type, group->numTriangles * 3, GL_UNSIGNED_SHORT, group->startIndex * sizeof(WORD), group->startVert );
+#endif
 	}
 
 	CHECK_GL_ERRORS;

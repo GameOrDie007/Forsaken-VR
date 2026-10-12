@@ -1,0 +1,63 @@
+Forsaken VR for Quest and Steam Frame: other people's work in the app
+=====================================================================
+
+Forsaken VR is built on ForsakenX and is under the GNU General Public
+License (LICENSE, beside this file). The app also carries the libraries
+below, each under its own licence, whose text is in the licenses folder.
+
+The splash picture is not covered by the GPL. It is (c) 2026 Game Or Die,
+all rights reserved, and may be used only as part of Forsaken VR.
+
+SDL 2.32.10 (windowing, input, sound output)
+  in:      libSDL2.so
+  licence: zlib
+  source:  https://github.com/libsdl-org/SDL
+  text:    SDL.txt
+
+OpenAL Soft 1.25.2 (the game's sound)
+  in:      libopenal.so
+  licence: LGPL-2.0-or-later (GNU Library GPL 2)
+  source:  https://github.com/kcat/openal-soft (tag 1.25.2), built unmodified
+  text:    OpenAL-Soft.txt
+
+OpenXR loader for Android (talking to the headset)
+  in:      libopenxr_loader.so
+  licence: Apache-2.0
+  source:  https://github.com/KhronosGroup/OpenXR-SDK (the Khronos AAR)
+  text:    OpenXR-SDK-loader.txt
+
+Lua 5.1.5 (the game's scripts)
+  in:      libmain.so
+  licence: MIT
+  source:  https://www.lua.org
+  text:    Lua.txt
+
+LuaSocket 2.0.2
+  in:      libmain.so
+  licence: MIT
+  source:  https://github.com/lunarmodules/luasocket
+  text:    LuaSocket.txt
+
+ENet 1.3.18 (multiplayer networking)
+  in:      libmain.so
+  licence: MIT
+  source:  https://github.com/lsalzman/enet
+  text:    ENet.txt
+
+libpng 1.6.44 (the game's pictures)
+  in:      libmain.so
+  licence: libpng
+  source:  https://github.com/pnggroup/libpng
+  text:    libpng.txt
+
+libogg 1.3.5, libvorbis 1.3.7, libtheora 1.2.0 (the soundtrack and the intro film)
+  in:      libmain.so
+  licence: BSD-3-Clause
+  source:  https://xiph.org
+  text:    libogg.txt, libvorbis.txt, libtheora.txt
+
+LLVM libc++ (the C++ runtime OpenAL Soft uses)
+  in:      libc++_shared.so, from the Android NDK
+  licence: Apache-2.0 WITH LLVM-exception
+  source:  https://llvm.org
+  text:    LLVM-libc++.txt

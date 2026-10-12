@@ -44,6 +44,20 @@ const char * render_error_description( int e )
 		return NULL;
 }
 
+#ifdef GLES
+/* glMapBuffer's OpenGL ES form: the whole buffer, for writing, keeping what
+   is already in it (no invalidate), as desktop GL_WRITE_ONLY does. */
+void * fs_gles_map_buffer( GLenum target, GLenum access )
+{
+	GLint size = 0;
+	(void) access;
+	glGetBufferParameteriv( target, GL_BUFFER_SIZE, &size );
+	if ( size <= 0 )
+		return NULL;
+	return glMapBufferRange( target, 0, size, GL_MAP_WRITE_BIT );
+}
+#endif
+
 // poly modes
 
 void render_mode_wireframe(void)
@@ -232,7 +246,11 @@ bool FSCreateTexture(LPTEXTURE *texture, const char *fileName, u_int16_t *width,
 static void print_info( void )
 {
 	GLboolean b;
+#ifdef GLES
+	b = GL_FALSE;	/* no stereo query in OpenGL ES */
+#else
 	glGetBooleanv(GL_STEREO,&b);
+#endif
 
 	DebugPrintf( "gl vendor='%s', renderer='%s', version='%s', shader='%s', stereo='%s'\n",
 		glGetString(GL_VENDOR),
@@ -277,6 +295,13 @@ static void print_info( void )
 	#define GLSL_VERT_OUT  "varying"
 	#define GLSL_FRAG_IN   "varying"
 	#define GLSL_FRAG_OUT  ""
+#elif GL >= 3 && defined(GLES)
+	/* OpenGL ES 3 wants its own version line and a default precision */
+	#define GLSL_VERSION   "300 es\nprecision highp float;"
+	#define GLSL_VERT_IN   "in"
+	#define GLSL_FRAG_IN   "in"
+	#define GLSL_FRAG_OUT  "out"
+	#define GLSL_VERT_OUT  "out"
 #elif GL >= 3
 	#define GLSL_VERSION   "150"
 	#define GLSL_VERT_IN   "in"

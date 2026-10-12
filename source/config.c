@@ -1542,7 +1542,7 @@ read_config( USERCONFIG *u, char *cfg_name )
 	// is versioned and anything else is discarded in favour of the defaults.
 	if ( !config_format_current( f ) )
 	{
-		DebugPrintf( "read_config: '%s' has no KEYFORMAT %d -- it predates the "
+		DebugPrintf( "read_config: '%s' has no KEYFORMAT %d: it predates the "
 		             "current key scheme, ignoring it and using defaults\n",
 		             cfg_name, CONFIG_KEY_FORMAT );
 		fclose( f );

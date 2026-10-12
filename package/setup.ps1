@@ -68,7 +68,7 @@ $ProgressPreference = 'SilentlyContinue'
 
 $Product = 'Forsaken VR'
 $ProductFile = 'Forsaken VR'
-$Version = '1.0'
+$Version = '1.1'
 $Title = 'Forsaken VR'
 # GameExe, not Exe: PowerShell names are not case-sensitive, and a function's
 # local $exe would hide it.
@@ -180,6 +180,13 @@ function Desktop { return [Environment]::GetFolderPath('Desktop') }
 
 # --- finding Forsaken Remastered -------------------------------------------------------
 
+# A path from two parts, as text.  Join-Path asks the drive to exist, so one
+# Steam library on a drive that is gone (a removed USB drive still listed in
+# libraryfolders.vdf) stopped the whole search; this never fails.
+function Combine-Path([string] $a, [string] $b) {
+    try { return [System.IO.Path]::Combine($a, $b) } catch { return '' }
+}
+
 function True-Case([string] $p) {
     # The folder's name as it is on disk: Steam reports its path in lower case.
     try {
@@ -188,7 +195,7 @@ function True-Case([string] $p) {
         if (-not $d.Parent) { return $d.FullName.ToUpper() }
         $match = $d.Parent.GetDirectories($d.Name) | Select-Object -First 1
         if (-not $match) { return $p }
-        return (Join-Path (True-Case $d.Parent.FullName) $match.Name)
+        return (Combine-Path (True-Case $d.Parent.FullName) $match.Name)
     } catch { return $p }
 }
 
@@ -224,7 +231,7 @@ function Search-Roots {
         if (-not $d) { continue }
         $d = $d.Trim('"')
         # A dropped copy of the data set is the data, not a game folder.
-        if (Test-Path -LiteralPath (Join-Path $d 'levels')) { $script:DataPath = $d; continue }
+        if (Test-Path -LiteralPath (Combine-Path $d 'levels')) { $script:DataPath = $d; continue }
         Add-Root $d
     }
     if ($NoSearch) { return }
@@ -242,14 +249,14 @@ function Search-Roots {
     foreach ($s in $steamDirs) {
         $s = $s -replace '/', '\'
         $libraries += $s
-        foreach ($vdf in @((Join-Path $s 'steamapps\libraryfolders.vdf'), (Join-Path $s 'config\libraryfolders.vdf'))) {
+        foreach ($vdf in @((Combine-Path $s 'steamapps\libraryfolders.vdf'), (Combine-Path $s 'config\libraryfolders.vdf'))) {
             if (-not (Test-Path -LiteralPath $vdf)) { continue }
             foreach ($line in Get-Content -LiteralPath $vdf) {
                 if ($line -match '"path"\s+"([^"]+)"') { $libraries += ($Matches[1] -replace '\\\\', '\') }
             }
         }
     }
-    foreach ($lib in $libraries) { Add-Root (Join-Path $lib 'steamapps\common\Forsaken Remastered') }
+    foreach ($lib in $libraries) { Add-Root (Combine-Path $lib 'steamapps\common\Forsaken Remastered') }
 
     # 3. GOG registers each game on its own.
     foreach ($k in @('HKLM:\SOFTWARE\WOW6432Node\GOG.com\Games', 'HKLM:\SOFTWARE\GOG.com\Games')) {
@@ -278,9 +285,9 @@ function Search-Roots {
     try { $drives = [System.IO.DriveInfo]::GetDrives() | Where-Object { $_.DriveType -eq 'Fixed' -and $_.IsReady } | ForEach-Object { $_.RootDirectory.FullName } } catch { $drives = @('C:\') }
     foreach ($dr in $drives) {
         foreach ($f in @('Forsaken Remastered', 'Forsaken')) {
-            Add-Root (Join-Path $dr ('GOG Games\' + $f))
-            Add-Root (Join-Path $dr ('GOG Galaxy\Games\' + $f))
-            Add-Root (Join-Path $dr ('Games\' + $f))
+            Add-Root (Combine-Path $dr ('GOG Games\' + $f))
+            Add-Root (Combine-Path $dr ('GOG Galaxy\Games\' + $f))
+            Add-Root (Combine-Path $dr ('Games\' + $f))
         }
     }
 }
@@ -288,7 +295,7 @@ function Search-Roots {
 # Forsaken Remastered's folder holds ForsakenEX.kpf.
 function Find-Remaster {
     foreach ($r in $Roots) {
-        if (Test-Path -LiteralPath (Join-Path $r 'ForsakenEX.kpf')) { return $r }
+        if (Test-Path -LiteralPath (Combine-Path $r 'ForsakenEX.kpf')) { return $r }
     }
     return $null
 }
@@ -1039,6 +1046,10 @@ function Do-Detect {
     Log ('Forsaken VR: ' + $(if ($s.installed) { $s.installedVersion + ' in ' + $s.vrFolder } else { 'not installed' }))
     $Result['steamLibrary'] = Steam-HasOurs
 }
+
+# Loaded by the Quest Setup (quest\setup-quest.ps1) for its search and data
+# functions only: stop here.
+if ($env:FORSAKEN_VR_SETUP_LIBRARY -eq '1') { return }
 
 switch ($Mode) {
     'detect'    { Do-Detect }

@@ -72,7 +72,11 @@ static bool   fbo_ready = false;
    Only when the target holds an eye: menus, the title's VDU pages and the
    intro leave something else in it, and keep the plain view. */
 
+#ifdef __ANDROID__
+bool vr_spectator      = false;   /* no monitor on a standalone headset */
+#else
 bool vr_spectator      = true;    /* VRSpectator / -vrspectator:0|1 */
+#endif
 int  vr_spectator_eye  = -1;      /* the eye kept for the observer this frame, or -1 */
 bool vr_observer_panel = false;   /* a menu screen was drawn this frame */
 bool vr_observer_windowed = false;/* VRObserverWindowed: Alt+Enter */
@@ -151,14 +155,19 @@ static GLuint spec_shader( GLenum type, const char * src )
 
 static bool spec_init( void )
 {
+#ifdef GLES
+	#define VR_GLSL_HEADER "#version 300 es\nprecision highp float;\n"
+#else
+	#define VR_GLSL_HEADER "#version 150\n"
+#endif
 	static const char * vs =
-		"#version 150\n"
+		VR_GLSL_HEADER
 		"in vec2 pos;\n"
 		"in vec2 uv;\n"
 		"out vec2 v_uv;\n"
 		"void main() { v_uv = uv; gl_Position = vec4( pos, 0.0, 1.0 ); }\n";
 	static const char * fs =
-		"#version 150\n"
+		VR_GLSL_HEADER
 		"uniform sampler2D tex;\n"
 		"uniform int  keyed;\n"
 		"uniform vec4 solid[2];\n"
@@ -693,7 +702,7 @@ bool vr_target_init( int width, int height )
 
 	if( status != GL_FRAMEBUFFER_COMPLETE )
 	{
-		Msg( "vr_target: framebuffer incomplete (%s) -- falling back to "
+		Msg( "vr_target: framebuffer incomplete (%s), falling back to "
 		     "direct rendering\n", fbo_status_string( status ) );
 		vr_target_cleanup();
 		vr_enabled = false;   // fail open to flat rendering

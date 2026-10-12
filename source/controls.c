@@ -796,6 +796,8 @@ void ReadInput( void )
 	flush_input = false;
 }
 
+void DumpResolvedBindings( USERCONFIG *conf );
+
 void control_ship( USERCONFIG *conf, SHIPCONTROL *ctrl )
 {
   int   j, joystick;
@@ -1143,6 +1145,12 @@ void control_ship( USERCONFIG *conf, SHIPCONTROL *ctrl )
     ctrl->forward += MoveAccell * MaxMoveSpeed * my * framelag;
     ctrl->right   += MoveAccell * MaxMoveSpeed * mx * framelag;
     ctrl->yaw     += TurnAccell * MaxTurnSpeed * lx * framelag;
+    /* VR Options > Invert pitch (VRInvertPitch): stick up puts the nose down */
+    {
+      extern bool vr_invert_pitch;
+      if ( vr_invert_pitch )
+        ly = -ly;
+    }
     ctrl->pitch   -= TurnAccell * MaxTurnSpeed * ly * framelag;   /* stick up = pitch up */
 
     /* X and Y roll */
@@ -1245,7 +1253,9 @@ void control_ship( USERCONFIG *conf, SHIPCONTROL *ctrl )
   //
   // Prints whenever ANY rotation is being produced, not just during a roll, so
   // it also answers whether the pitch injection is constant or roll-triggered.
-  if ( ctrl->pitch != 0.0F || ctrl->yaw != 0.0F || ctrl->roll != 0.0F )
+  // Only with -debug: a player's -log would otherwise get a line every frame.
+  extern bool Debug;
+  if ( Debug && ( ctrl->pitch != 0.0F || ctrl->yaw != 0.0F || ctrl->roll != 0.0F ) )
   {
     DebugPrintf( "ctrl: pitch=%+.5f yaw=%+.5f roll=%+.5f | "
                  "keys up=%d down=%d left=%d right=%d rollL=%d rollR=%d "

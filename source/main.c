@@ -178,6 +178,7 @@ static bool ParseCommandLine(char* lpCmdLine)
 	int    shipbob = 1;
 	int    swivel = 0;
 	int    autolevel = 1;
+	int    invertpitch = 0;
 	int    turnspeed = 75;
 	float  vigforce = -1.0f;
 	float  hudfont = 0.0f;
@@ -577,6 +578,12 @@ static bool ParseCommandLine(char* lpCmdLine)
 		{
 			extern bool vr_auto_level;
 			vr_auto_level = autolevel != 0;
+		}
+		// invert pitch in VR: 1 = stick up puts the nose down (this run only)
+		else if ( sscanf( option, "vrinvertpitch:%d", &invertpitch ) == 1 )
+		{
+			extern bool vr_invert_pitch;
+			vr_invert_pitch = invertpitch != 0;
 		}
 		// swivel chair: 1 = turning your body turns the ship (this run only)
 		else if ( sscanf( option, "vrswivel:%d", &swivel ) == 1 )
@@ -1090,6 +1097,16 @@ int main( int argc, char* argv[] )
 	int i;
 	char cli[500];
     int failcount = 0; // number of times RenderLoop has failed
+
+#ifdef __ANDROID__
+	// On the headset the game's files live in the app's own storage, which
+	// ForsakenActivity hands over as HOME. Everything is opened relative to it.
+	{
+		const char * home = getenv( "HOME" );
+		if ( !home || chdir( home ) != 0 )
+			Msg( "Could not change to the game's folder: %s", home ? home : "(no HOME)" );
+	}
+#endif
 
 	// Before anything that can fault, and before the window exists. Also
 	// clears any stale crash.txt, so a report present afterwards is

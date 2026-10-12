@@ -152,9 +152,17 @@ static void set_opengl_settings( void )
 
 #if SDL_VERSION_ATLEAST(2,0,0)
 #if GL == 3
+#ifdef GLES
+	// The headsets: OpenGL ES 3. Set before the window is made, which is when
+	// SDL picks the display config on Android.
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#else
 	// Version is requested per-context in create_video_surface(); see the
 	// ladder there for why we no longer just ask for 3.2.
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#endif
 #endif
 #endif
 
@@ -303,23 +311,34 @@ static bool create_video_surface( u_int32_t window_flags )
 		// Walk down from 4.6 so we still start on hardware that cannot manage
 		// it, ending at the 3.2 we used to hard-code (flat mode is happy there,
 		// VR will not be: vr_openxr logs the mismatch).
+#ifdef GLES
+		// The headsets: OpenGL ES, newest first.
+		static const struct { int major, minor; } gl_versions[] = {
+			{3,2}, {3,1}, {3,0}
+		};
+		const int gl_profile = SDL_GL_CONTEXT_PROFILE_ES;
+#else
 		static const struct { int major, minor; } gl_versions[] = {
 			{4,6}, {4,5}, {4,3}, {4,1}, {4,0}, {3,3}, {3,2}
 		};
+		const int gl_profile = SDL_GL_CONTEXT_PROFILE_CORE;
+#endif
 		unsigned v;
 		for( v = 0; v < sizeof(gl_versions)/sizeof(gl_versions[0]); v++ )
 		{
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, gl_versions[v].major);
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, gl_versions[v].minor);
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, gl_profile);
 			render_info.gl_context = SDL_GL_CreateContext( render_info.window );
 			if( render_info.gl_context )
 			{
-				DebugPrintf("main_sdl: created OpenGL %d.%d core context\n",
+				DebugPrintf("main_sdl: created OpenGL %s%d.%d context\n",
+					gl_profile == SDL_GL_CONTEXT_PROFILE_ES ? "ES " : "core ",
 					gl_versions[v].major, gl_versions[v].minor);
 				break;
 			}
-			DebugPrintf("main_sdl: OpenGL %d.%d core unavailable (%s)\n",
+			DebugPrintf("main_sdl: OpenGL %s%d.%d unavailable (%s)\n",
+				gl_profile == SDL_GL_CONTEXT_PROFILE_ES ? "ES " : "core ",
 				gl_versions[v].major, gl_versions[v].minor, SDL_GetError());
 		}
 	}
@@ -419,6 +438,13 @@ bool sdl_init_video( void )
 
 void sdl_render_present( render_info_t * info )
 {
+#ifdef __ANDROID__
+	// On a standalone headset the window is never seen, and xrWaitFrame paces
+	// the game; a swap here would also wait on the window's own refresh.
+	extern bool vr_enabled;
+	if( vr_enabled )
+		return;
+#endif
 #if SDL_VERSION_ATLEAST(2,0,0)
 	SDL_GL_SwapWindow(info->window);
 #else
