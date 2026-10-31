@@ -81,7 +81,7 @@ if ($Quiet -or $Json) { $NoPrompt = $true }
 
 $Product = 'Forsaken VR'
 $ProductFile = 'Forsaken VR'
-$Version = '1.1'
+$Version = '1.1.1'
 $AppId = 'net.gameordie.forsakenvr'
 $AppName = 'Forsaken VR'
 $Activity = $AppId + '/.ForsakenActivity'

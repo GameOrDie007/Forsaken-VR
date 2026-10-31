@@ -27,7 +27,7 @@ For the standalone version on a Quest 3 or a Steam Frame, see
 
 ### Installing by hand
 
-1. Download `Forsaken-VR-1.1-PCVR.zip` from [Releases](../../releases) and
+1. Download `Forsaken-VR-1.1.1-PCVR.zip` from [Releases](../../releases) and
    unzip it anywhere.
 2. Run **`Setup.bat`**. It takes a few minutes the first time, and asks one
    question: whether to add Forsaken VR to your Steam library.
@@ -116,7 +116,7 @@ fixed it completely in testing, at full resolution.
 
 Forsaken VR also runs on the Quest 3 by itself, with no PC while you play.
 
-1. Download `Forsaken-VR-1.1-Quest.zip` from [Releases](../../releases) and
+1. Download `Forsaken-VR-1.1.1-Quest.zip` from [Releases](../../releases) and
    unzip it on your PC.
 2. Turn the headset on, plug it into the PC with a USB-C cable, and
    double-click **`Setup.bat`**. The first time, put the headset on and allow

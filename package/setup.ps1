@@ -68,7 +68,7 @@ $ProgressPreference = 'SilentlyContinue'
 
 $Product = 'Forsaken VR'
 $ProductFile = 'Forsaken VR'
-$Version = '1.1'
+$Version = '1.1.1'
 $Title = 'Forsaken VR'
 # GameExe, not Exe: PowerShell names are not case-sensitive, and a function's
 # local $exe would hide it.

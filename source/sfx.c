@@ -40,6 +40,7 @@ void ProcessEnemyBikerTaunt( void ){}
 bool RestoreSfxData( u_int32_t id, VECTOR *pos, u_int16_t *group ){return 0;}
 int16_t ReturnSFXIndex( char *file ){return -1;}
 void ReTriggerSfx( void ){}
+void DropUnclaimedSfx( void ){}
 
 void ModifyLoopingSfx( u_int32_t uid, float Freq, float Volume ){}
 
@@ -1280,6 +1281,29 @@ bool RestoreSfxData( u_int32_t id, VECTOR *pos, u_int16_t *group )
 	}
 
 	return false;
+}
+
+/* After a load: stop the moving sounds no model or spot effect claimed,
+   whose position and group would otherwise stay unknown. */
+void DropUnclaimedSfx( void )
+{
+	int i, dropped = 0, claimed = 0;
+
+	for ( i = 0; i < MAX_LOOPING_SFX; i++ )
+	{
+		if ( !SpotSfxList[ i ].used || SpotSfxList[ i ].type != LOOPING_SFX_VariableGroup )
+			continue;
+		if ( SpotSfxList[ i ].pos && SpotSfxList[ i ].group )
+		{
+			claimed++;
+			continue;
+		}
+		if ( !StopSfx( SpotSfxList[ i ].uid ) )
+			SpotSfxList[ i ].used = false;
+		dropped++;
+	}
+	if ( claimed || dropped )
+		DebugPrintf( "sfx: %d moving sound(s) back with their owners, %d without one dropped\n", claimed, dropped );
 }
 
 void ReTriggerSfx( void )
@@ -2716,7 +2740,9 @@ void ProcessLoopingSfx( void )
 			}
 			if ( SpotSfxList[ i ].type == LOOPING_SFX_VariableGroup ) 
 			{
-			 	Pos = *( SpotSfxList[ i ].pos ); 
+				if ( !SpotSfxList[ i ].pos || !SpotSfxList[ i ].group )
+					continue;	// loaded from a save, owner not back yet
+			 	Pos = *( SpotSfxList[ i ].pos );
 				Modify = SoundInfo[Ships[ Current_Camera_View ].Object.Group][*(SpotSfxList[ i ].group)];
 			}
 		}
@@ -2822,13 +2848,19 @@ FILE *SaveAllSfx( FILE *fp )
 				fwrite( &SpotSfxList[ i ], sizeof( SPOT_SFX_LIST ), 1, fp );
 
 		fwrite( &SfxUniqueID, sizeof( u_int32_t ), 1, fp );
+
+		{
+			int moving = 0;
+			for ( i = 0; i < MAX_LOOPING_SFX; i++ )
+				if ( SpotSfxList[ i ].used && SpotSfxList[ i ].type == LOOPING_SFX_VariableGroup )
+					moving++;
+			DebugPrintf( "sfx: saved %d looping sound(s), %d moving\n", (int) num_active_sfx, moving );
+		}
 	}
 
 	return( fp );
 }
 
-// TODO: this code loads pointers !!!!!!!!!!
-// apparrently this is somehow possible if you save/load from same binary
 FILE *LoadAllSfx( FILE *fp )
 {
 	u_int16_t num_active_sfx = 0;
@@ -2849,35 +2881,36 @@ FILE *LoadAllSfx( FILE *fp )
 		
 		// read in sfx data...
 		for ( i = 0; i < num_active_sfx; i++ )
-			fread( &SpotSfxList[ i ], sizeof( SPOT_SFX_LIST ), 1, fp );
+		{
+			SPOT_SFX_LIST spare;
+			fread( i < MAX_LOOPING_SFX ? &SpotSfxList[ i ] : &spare, sizeof( SPOT_SFX_LIST ), 1, fp );
+		}
 
 		fread( &SfxUniqueID, sizeof( u_int32_t ), 1, fp );
 
-		/* A sound that moves is saved with its position and group as raw
-		   addresses, which hold only in the build that wrote the save: a save
-		   from an older build crashed a few seconds after loading. Keep such a
-		   sound only when both addresses can be read and the group is one this
-		   level has; drop it otherwise, rather than crash. */
+		/* The save holds raw addresses: a moving sound's position and group,
+		   and every sound's audio source. They belonged to the process that
+		   wrote the save, so never read them. A moving sound waits, silent,
+		   until the model or spot effect that owns it is loaded and hands its
+		   position and group back (RestoreSfxData); DropUnclaimedSfx() then
+		   stops any nobody claimed. On the Quest every launch has new
+		   addresses, so trusting them crashed every save loaded after a
+		   restart. */
 		{
-			extern bool mem_readable( const void * p, size_t n );
-			extern MLOADHEADER Mloadheader;
-			int dropped = 0;
+			int moving = 0;
 			for ( i = 0; i < num_active_sfx && i < MAX_LOOPING_SFX; i++ )
 			{
-				if ( !SpotSfxList[ i ].used || SpotSfxList[ i ].type != LOOPING_SFX_VariableGroup )
-					continue;
-				if ( !mem_readable( SpotSfxList[ i ].pos, sizeof( VECTOR ) ) ||
-				     !mem_readable( SpotSfxList[ i ].group, sizeof( u_int16_t ) ) ||
-				     *SpotSfxList[ i ].group >= Mloadheader.num_groups )
+				SpotSfxList[ i ].source = NULL;
+				if ( SpotSfxList[ i ].used && SpotSfxList[ i ].type == LOOPING_SFX_VariableGroup )
 				{
-					SpotSfxList[ i ].used = false;
-					dropped++;
+					SpotSfxList[ i ].pos = NULL;
+					SpotSfxList[ i ].group = NULL;
+					moving++;
 				}
 			}
-			if ( dropped )
-				DebugPrintf( "sfx: %d moving sound(s) in the save had addresses from another build; dropped\n", dropped );
+			DebugPrintf( "sfx: %d looping sound(s) in the save, %d moving\n", (int) num_active_sfx, moving );
 		}
-		
+
 		ReTriggerSfx();
 	}
 

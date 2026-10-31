@@ -2543,6 +2543,8 @@ FILE * LoadAllSpotFX( FILE * fp )
 			fread( &SpotFX[ i ].Green, sizeof( u_int8_t ), 1, fp );
 			fread( &SpotFX[ i ].Blue, sizeof( u_int8_t ), 1, fp );
 			fread( &SpotFX[ i ].Pos, sizeof( VECTOR ), 1, fp );
+			if( SpotFX[ i ].SoundFX_ID )
+				RestoreSfxData( SpotFX[ i ].SoundFX_ID, &SpotFX[ i ].Pos, &SpotFX[ i ].Group );
 			fread( &SpotFX[ i ].DirVector, sizeof( VECTOR ), 1, fp );
 			fread( &SpotFX[ i ].UpVector, sizeof( VECTOR ), 1, fp );
 			fread( &SpotFX[ i ].Delay, sizeof( float ), 1, fp );

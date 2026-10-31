@@ -367,6 +367,8 @@ void InGameLoad( MENUITEM * MenuItem )
 
 		fread( &Cheated, sizeof( bool ), 1, fp );
 
+		DropUnclaimedSfx();
+
 		DebugPrintf( "Loaded OK\n" );
 		fclose( fp );
 
