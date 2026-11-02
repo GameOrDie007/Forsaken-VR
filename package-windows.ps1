@@ -171,6 +171,29 @@ if ($Mode -eq 'release') {
     Copy-Item $cfgTemplate (Join-Path $gameOut 'configs\debug.txt') -Force
 }
 
+# The Game Tome: its OpenXR layer and the built book, from the gitignored
+# gametome-drop, beside projectx.exe in gametome\. The book holds the manual's
+# pages as pictures, so it lives in the release and never in the repository.
+# The Game Tome's own release check runs on it first: it refuses a book that
+# carries test pages or anyone's writing.
+$drop = Join-Path $src 'gametome-drop'
+if ($Mode -eq 'release') {
+    if (-not (Test-Path (Join-Path $drop 'layer\GameTomeLayer.dll')) -or -not (Test-Path (Join-Path $drop 'tome\tome.txt'))) {
+        Write-Host 'ERROR: gametome-drop\ (the Game Tome layer and book) is missing. Refusing to build.' -ForegroundColor Red
+        exit 1
+    }
+    $checker = 'E:\Tools\Game Tome\tools\check-release-tome.ps1'
+    if (Test-Path $checker) {
+        & powershell -NoProfile -ExecutionPolicy Bypass -File $checker -Tome (Join-Path $drop 'tome')
+        if ($LASTEXITCODE -ne 0) { Write-Host 'ERROR: the Game Tome release check refused the book.' -ForegroundColor Red; exit 1 }
+    } else {
+        Write-Host '  NOTE: no Game Tome release check on this PC; the book is not checked' -ForegroundColor Yellow
+    }
+    Write-Host '  Game Tome'
+    robocopy (Join-Path $drop 'layer') (Join-Path $gameOut 'gametome\layer') GameTomeLayer.dll GameTomeLayer.json /njh /njs /ndl /nc /ns /np | Out-Null
+    robocopy (Join-Path $drop 'tome') (Join-Path $gameOut 'gametome\tome') /e /njh /njs /ndl /nc /ns /np | Out-Null
+}
+
 if ($Mode -ne 'release') {
     # Setup makes these in the VR folder; the portable copy needs them here.
     New-Item -ItemType Directory -Path (Join-Path $out 'Pilots')   -Force | Out-Null
@@ -280,6 +303,10 @@ if ($Mode -eq 'release') {
         if ($allowed -contains $f.Extension.ToLower()) { continue }
         if ($allowedNames -contains $f.Name) { continue }
         if ($f.Name -like 'Controls - Forsaken VR - *.png' -and $f.DirectoryName -eq $out) { continue }   # our controls pictures
+        # the Game Tome's book: its pages, sounds and index, checked above
+        $gt = Join-Path $out 'files\game\gametome\'
+        if ($f.FullName.StartsWith($gt, [StringComparison]::OrdinalIgnoreCase) -and
+            @('.jpg', '.png', '.wav', '.json', '.js') -contains $f.Extension.ToLower()) { continue }
         $bad += $f.FullName.Substring($out.Length + 1)
     }
 

@@ -1,4 +1,4 @@
-# Forsaken VR: install, uninstall and log collection, in one script.
+﻿# Forsaken VR: install, uninstall and log collection, in one script.
 #
 # It finds YOUR copy of Forsaken Remastered (every Steam library, GOG, the
 # Windows list of installed programs, the usual folders, or a folder you drag
@@ -68,7 +68,7 @@ $ProgressPreference = 'SilentlyContinue'
 
 $Product = 'Forsaken VR'
 $ProductFile = 'Forsaken VR'
-$Version = '1.1.1'
+$Version = '1.2'
 $Title = 'Forsaken VR'
 # GameExe, not Exe: PowerShell names are not case-sensitive, and a function's
 # local $exe would hide it.

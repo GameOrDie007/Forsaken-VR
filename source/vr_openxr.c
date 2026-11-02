@@ -111,6 +111,128 @@ static XrSystemId  xr_system   = XR_NULL_SYSTEM_ID;
 // session state (Phase 3b): declared here so shutdown below can reach them
 bool vr_xr_session_running = false;
 
+/* The Game Tome: Forsaken's manual as a book in the off hand. The book is not
+   here: it ships as its own OpenXR API layer beside projectx.exe
+   (gametome\layer, built, never linked) with its book in gametome\tome. This
+   side only asks for it. The whole interface is a small shared memory block
+   the layer makes when our instance is created, named after our process id:
+   we say which book and which hand turns the pages, and read back while it
+   shows. Laid out here from the layer's published layout: every field 4 bytes
+   or chars, 540 bytes in all. PC only: the layer is a Windows DLL. */
+#if defined(_WIN32) && !defined(__ANDROID__)
+#define GT_MAGIC 0x31425447u   /* "GTB1" */
+typedef struct
+{
+	unsigned      magic;
+	unsigned      size;
+	volatile long ready;      /* the layer: the session is one the book draws into */
+	volatile long open;       /* us: 1 = open the book; the layer takes it back to 0 */
+	volatile long showing;    /* the layer: 1 while the book is open */
+	long          main_hand;  /* us: the page-turning hand, 0 left, 1 right */
+	long          floating;   /* us: 1 = in front of the player, not in the hand */
+	char          tome_dir[512];
+} gt_signal_t;
+static HANDLE        gt_map   = NULL;
+static gt_signal_t * gt       = NULL;
+static bool          gt_layer = false;      /* the layer shipped, so we asked for it */
+static char          gt_tome[ MAX_PATH ];   /* <exe folder>\gametome\tome */
+
+/* Before xrCreateInstance: point the loader at the layer, if it shipped. */
+static void gt_layer_path( void )
+{
+	char exe[ MAX_PATH ], dir[ MAX_PATH + 32 ], json[ MAX_PATH + 64 ];
+	DWORD n = GetModuleFileNameA( NULL, exe, sizeof( exe ) );
+	char * slash = ( n > 0 && n < sizeof( exe ) ) ? strrchr( exe, '\\' ) : NULL;
+	gt_layer = false;
+	if( !slash )
+		return;
+	*slash = 0;
+	snprintf( dir,  sizeof( dir ),  "%s\\gametome\\layer", exe );
+	snprintf( json, sizeof( json ), "%s\\GameTomeLayer.json", dir );
+	snprintf( gt_tome, sizeof( gt_tome ), "%s\\gametome\\tome", exe );
+	if( GetFileAttributesA( json ) == INVALID_FILE_ATTRIBUTES )
+	{
+		DebugPrintf( "gametome: no layer at %s, so no Game Tome this run\n", dir );
+		return;
+	}
+	SetEnvironmentVariableA( "XR_API_LAYER_PATH", dir );
+	{
+		char env[ MAX_PATH + 64 ];
+		snprintf( env, sizeof( env ), "XR_API_LAYER_PATH=%s", dir );
+		_putenv( env );
+	}
+	gt_layer = true;
+}
+
+static void gt_write( void )
+{
+	if( !gt )
+		return;
+	snprintf( gt->tome_dir, sizeof( gt->tome_dir ), "%s", gt_tome );
+	gt->main_hand = vr_leftorium ? 0 : 1;   /* the aiming hand turns the pages */
+}
+
+/* After xrCreateSession: find the layer's block and name the book at once, so
+   the open-book gesture (both palms up, the layer's own) opens it before the
+   menu row is ever used. */
+static void gt_signal_open( void )
+{
+	char name[ 64 ];
+	if( !gt_layer )
+		return;
+	snprintf( name, sizeof( name ), "Local\\GameOrDie.GameTome.%lu", (unsigned long) GetCurrentProcessId() );
+	gt_map = OpenFileMappingA( FILE_MAP_ALL_ACCESS, FALSE, name );
+	if( !gt_map )
+	{
+		DebugPrintf( "gametome: the layer is loaded but has no signal block (%s)\n", name );
+		return;
+	}
+	gt = (gt_signal_t *) MapViewOfFile( gt_map, FILE_MAP_ALL_ACCESS, 0, 0, sizeof( gt_signal_t ) );
+	if( !gt || gt->magic != GT_MAGIC )
+	{
+		DebugPrintf( "gametome: the signal block is not one we know (magic %08x)\n", gt ? gt->magic : 0u );
+		if( gt )
+			UnmapViewOfFile( gt );
+		gt = NULL;
+		return;
+	}
+	gt_write();
+	DebugPrintf( "gametome: ready=%ld (block %u bytes); the open-book gesture opens %s\n",
+	             gt->ready, gt->size, gt->tome_dir );
+}
+
+static void gt_signal_close( void )
+{
+	if( gt )     { UnmapViewOfFile( gt ); gt = NULL; }
+	if( gt_map ) { CloseHandle( gt_map ); gt_map = NULL; }
+}
+
+bool vr_gametome_showing( void ) { return gt && gt->showing; }
+
+/* The pause menu's Game Tome row. */
+bool vr_gametome_open( void )
+{
+	if( !gt || !gt->ready )
+	{
+		DebugPrintf( "gametome: %s\n", gt ? "the book is not ready yet" : "the book's layer is not loaded this run" );
+		return false;
+	}
+	gt_write();
+	gt->floating = 0;
+	gt->open     = 1;
+	DebugPrintf( "gametome: opened from the menu: %s\n", gt->tome_dir );
+	return true;
+}
+#else
+static const bool    gt_layer = false;      /* PC only for now */
+static void gt_layer_path( void ) {}
+static void gt_write( void ) {}
+static void gt_signal_open( void ) {}
+static void gt_signal_close( void ) {}
+bool vr_gametome_showing( void ) { return false; }
+bool vr_gametome_open( void ) { return false; }
+#endif
+
 /* Headless measurement mode (-fakeeye). Renders the whole VR path into an
    eye-sized offscreen target with NO OpenXR runtime, so the geometry the
    headset would get can be captured and measured at a desk. Every entry point
@@ -900,6 +1022,7 @@ bool vr_openxr_init( void )
 	vr_xr_ready = false;
 
 	pick_runtime();
+	gt_layer_path();
 
 #ifdef __ANDROID__
 	if( !vr_android_loader_init() )
@@ -945,6 +1068,12 @@ retry_runtime:
 	// implement 1.0 and reject a 1.1 request outright with
 	// XR_ERROR_API_VERSION_UNSUPPORTED. Nothing we use is 1.1-only.
 	create.applicationInfo.apiVersion = XR_CURRENT_API_VERSION;
+	{
+		/* The Game Tome's layer, when it shipped. */
+		static const char * gt_layers[] = { "XR_APILAYER_GAMEORDIE_game_tome" };
+		create.enabledApiLayerCount = gt_layer ? 1 : 0;
+		create.enabledApiLayerNames = gt_layer ? gt_layers : NULL;
+	}
 	r = xrCreateInstance( &create, &xr_instance );
 
 	if( r == XR_ERROR_API_VERSION_UNSUPPORTED )
@@ -953,6 +1082,19 @@ retry_runtime:
 			(unsigned) XR_VERSION_MAJOR( XR_CURRENT_API_VERSION ),
 			(unsigned) XR_VERSION_MINOR( XR_CURRENT_API_VERSION ) );
 		create.applicationInfo.apiVersion = XR_API_VERSION_1_0;
+		r = xrCreateInstance( &create, &xr_instance );
+	}
+
+	/* If the instance will not come up with the book's layer, it comes up
+	   without it: the game matters more than the book. */
+	if( XR_FAILED( r ) && create.enabledApiLayerCount )
+	{
+		DebugPrintf( "gametome: the instance would not start with the layer (%s); starting without it\n", xr_str(r) );
+		create.enabledApiLayerCount = 0;
+		create.enabledApiLayerNames = NULL;
+#if defined(_WIN32) && !defined(__ANDROID__)
+		gt_layer = false;
+#endif
 		r = xrCreateInstance( &create, &xr_instance );
 	}
 
@@ -1126,6 +1268,9 @@ void vr_openxr_shutdown( void )
 	if( xr_space   != XR_NULL_HANDLE ) { xrDestroySpace( xr_space );     xr_space   = XR_NULL_HANDLE; }
 	if( xr_session != XR_NULL_HANDLE ) { xrDestroySession( xr_session ); xr_session = XR_NULL_HANDLE; }
 	vr_xr_session_running = false;
+
+	/* the layer's block goes with the instance; a new instance makes a new one */
+	gt_signal_close();
 
 	if( xr_instance != XR_NULL_HANDLE )
 	{
@@ -1845,6 +1990,8 @@ bool vr_openxr_start_session( void )
 	/* Non-fatal: without actions the headset still renders, you just cannot
 	   fly with the Touch controllers. */
 	create_actions();
+
+	gt_signal_open();
 
 	DebugPrintf( "openxr: session ready, waiting for runtime to say READY\n" );
 	return true;
@@ -2618,6 +2765,15 @@ void vr_openxr_end_frame( void )
 	end.layerCount           = 0;
 	end.layers               = NULL;
 
+	/* The Game Tome: the hand follows the Leftorium from frame to frame, and
+	   while the book is open the menu screen (and the HUD) give way to it. On
+	   SteamVR the book goes into our own projection layer, so a panel after it
+	   would cover the book. With no world drawn this frame the panel stays, and
+	   the book comes on a layer of its own over it. */
+	gt_write();
+	if( xr_frame_render && xr_quad_this_frame && vr_eyes_rendered && vr_gametome_showing() )
+		xr_quad_this_frame = false;
+
 	if( xr_frame_render && xr_quad_this_frame )
 	{
 		/* Menu frame: one flat panel fixed in world space and nothing else, so
@@ -2765,5 +2921,7 @@ void vr_panel_replace( void ) {}
 bool vr_openxr_settled( void ) { return true; }
 float vr_panel_half_tan_y( void ) { return vr_panel_width * 0.375f / vr_panel_dist; }
 bool vr_openxr_haptic( int hand, float amplitude, int ms ) { (void) hand; (void) amplitude; (void) ms; return false; }
+bool vr_gametome_showing( void ) { return false; }
+bool vr_gametome_open( void ) { return false; }
 
 #endif

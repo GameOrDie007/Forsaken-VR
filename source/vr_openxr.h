@@ -137,6 +137,13 @@ float vr_swivel_take( void );
    or a runtime that refused the haptic bindings. */
 bool vr_openxr_haptic( int hand, float amplitude, int ms );
 
+/* The Game Tome (PC): the book is its own OpenXR layer beside the game.
+   vr_gametome_open() asks it to open (the pause menu's row; false when the
+   layer is not loaded or not ready); vr_gametome_showing() is true while the
+   book is open, by the row or by the layer's own open-book gesture. */
+bool vr_gametome_open( void );
+bool vr_gametome_showing( void );
+
 /* Place the menu screen again on the next frame. */
 void vr_panel_replace( void );
 bool vr_openxr_settled( void );   /* head tracking has settled; the menu screen stays where it is placed */

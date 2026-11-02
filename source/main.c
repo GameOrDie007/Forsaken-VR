@@ -179,6 +179,7 @@ static bool ParseCommandLine(char* lpCmdLine)
 	int    swivel = 0;
 	int    autolevel = 1;
 	int    invertpitch = 0;
+	int    flydir = 0;
 	int    turnspeed = 75;
 	float  vigforce = -1.0f;
 	float  hudfont = 0.0f;
@@ -584,6 +585,13 @@ static bool ParseCommandLine(char* lpCmdLine)
 		{
 			extern bool vr_invert_pitch;
 			vr_invert_pitch = invertpitch != 0;
+		}
+		// fly direction in VR: 0 the ship's nose, 1 the head, 2 the off hand (this run only)
+		else if ( sscanf( option, "vrflydir:%d", &flydir ) == 1 )
+		{
+			extern int vr_fly_dir;
+			if ( flydir >= 0 && flydir <= 2 )
+				vr_fly_dir = flydir;
 		}
 		// swivel chair: 1 = turning your body turns the ship (this run only)
 		else if ( sscanf( option, "vrswivel:%d", &swivel ) == 1 )

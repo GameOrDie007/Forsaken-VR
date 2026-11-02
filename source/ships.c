@@ -2361,8 +2361,11 @@ void ShipMode0( GLOBALSHIP * ShipPnt , BYTE i )
 	// make sure the white out stuff is reset..
 	WhiteOut = 0.0F;
 	
+	VECTOR	speed_before;
+
 	//			Handle all the Input Stuff
 	control_ship( player_config, &control );
+	speed_before = ShipPnt->Object.Speed;
 	
 	ShipPnt->Object.Angle.x += control.pitch;
 	ShipPnt->Object.Angle.y += control.yaw;
@@ -2411,6 +2414,32 @@ void ShipMode0( GLOBALSHIP * ShipPnt , BYTE i )
 	
 	ShipPnt->Object.Speed.x += control.right;
 	ShipPnt->Object.Speed.y += control.up;
+
+	/* VR Fly direction (oct2.c vr_fly_rotation): this frame's push, from the
+	   sticks and the cruise alike, turned to where the head looks or the off
+	   hand points. The ship itself does not turn. */
+	{
+		extern bool vr_fly_rotation( MATRIX * h );
+		MATRIX h;
+		VECTOR push, turned;
+		if( vr_fly_rotation( &h ) )
+		{
+			push.x = ShipPnt->Object.Speed.x - speed_before.x;
+			push.y = ShipPnt->Object.Speed.y - speed_before.y;
+			push.z = ShipPnt->Object.Speed.z - speed_before.z;
+			ApplyMatrix( &h, &push, &turned );
+			ShipPnt->Object.Speed.x = speed_before.x + turned.x;
+			ShipPnt->Object.Speed.y = speed_before.y + turned.y;
+			ShipPnt->Object.Speed.z = speed_before.z + turned.z;
+		}
+		/* for the desk probe (-probefly): every push added up, turned or not */
+		{
+			extern VECTOR vr_push_total;
+			vr_push_total.x += ShipPnt->Object.Speed.x - speed_before.x;
+			vr_push_total.y += ShipPnt->Object.Speed.y - speed_before.y;
+			vr_push_total.z += ShipPnt->Object.Speed.z - speed_before.z;
+		}
+	}
 }
 
 /*===================================================================ÄÄÄÄ

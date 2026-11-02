@@ -1,16 +1,12 @@
 @echo off
-rem Forsaken VR on a Steam Frame: puts the logs in one zip on your
-rem desktop.  Run "Setup Steam Frame.bat" first.
+rem Collect logs from the Steam Frame: the game's logs and settings there, the library entry's
+rem log and Setup's log, in one zip on your desktop, ready to send us.  Nothing is sent
+rem anywhere by itself.
+rem No parenthesised blocks: a path with "(x86)" in it would end them early.
 setlocal
-set "ADDR="
-if exist "%~dp0files\frame-address.txt" set /p ADDR=<"%~dp0files\frame-address.txt"
-if "%ADDR%"=="" goto none
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0files\setup-quest.ps1" -Collect -Serial "%ADDR%"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0files\setup-quest.ps1" -Collect -SteamFrame %*
 set "RC=%ERRORLEVEL%"
+echo %* | findstr /i /c:"-Quiet" /c:"-Json" >nul && exit /b %RC%
 echo.
 pause
 exit /b %RC%
-:none
-echo   Run "Setup Steam Frame.bat" first: it asks for the Frame's name.
-pause
-exit /b 3

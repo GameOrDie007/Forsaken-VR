@@ -74,27 +74,28 @@ Controls)
                       the grip of your gun hand, point at the menu and pull
                       the trigger
 
-Also in VR Options: Invert pitch, turn speed, auto-level, a left-handed mode
-(Leftorium), swap sticks, swivel chair, vibration and ship bob.
+Also in VR Options: Fly direction (fly where you look or point), invert pitch,
+turn speed, auto-level, a left-handed mode (Leftorium), swap sticks, swivel
+chair, vibration and ship bob.
 
 Steam Frame (standalone)
 ------------------------
 The same app runs on a Valve Steam Frame with no PC, under Lepton (the
-Frame's Android layer), installed from the PC over Wi-Fi:
+Frame's Android layer). Setup puts it in the Frame's own library:
 
 1. On the Frame, once: Settings, System, Enable Developer Mode; then
-   Settings, Developer, Set User Password; and note the Frame's name
-   (Settings, System, Hostname).
-2. Start "Lepton Development" from the Frame's library and leave it
-   running.
-3. On the PC, double-click "Setup Steam Frame.bat" and type the Frame's
-   name. It installs the app and copies the game over Wi-Fi. Run it again
-   after an update, as on Quest.
-4. Double-click "Start on Steam Frame.bat" to start it (with Lepton
-   Development running). "Collect Steam Frame logs.bat" gathers the logs.
+   Settings, Developer, Set User Password. Lepton must be installed
+   (Store, search Lepton).
+2. On the PC, double-click "Setup Steam Frame.bat". The first time, on the
+   Frame: Settings, Developer, Pair new host, then Accept. It copies the
+   app and the game over your home network and adds Forsaken VR to the
+   Frame's library. Run it again after an update, as on Quest.
+3. On the Frame: Library, then Forsaken VR (or double-click
+   "Start on Steam Frame.bat").
 
-The Frame's pilot, saves and settings are copied to
-Documents\Forsaken VR\Steam Frame saves.
+"Collect Steam Frame logs.bat" gathers the logs and "Uninstall Steam
+Frame.bat" takes the game off the Frame. The Frame's pilot, saves and
+settings are copied to Documents\Forsaken VR\Steam Frame saves each time.
 
 Uninstall
 ---------

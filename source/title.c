@@ -2908,6 +2908,7 @@ void   VROptionsSliderDone( MENUITEM * Item );
 void   VROptionsToggled( MENUITEM * Item );
 void   VROptionsLoad( MENU * Menu );
 void   VROptionsRecenter( MENUITEM * Item );
+void   VROptionsGameTome( MENUITEM * Item );
 void   DrawVRSlider( MENUITEM * Item );
 
 char * VRPlayStyleName( SLIDER * s );
@@ -2915,6 +2916,8 @@ SLIDER VRPlayStyleSlider = {   0,   1,  1,   1, 0, 0.0F, 0.0F, 0, false, VRPlayS
 SLIDER VRVignetteSlider  = {   0,   2,  1,   0, 0, 0.0F, 0.0F, 0, false, VRVignetteName,     VROptionsSliderSet, NULL };
 char * VRTurnSpeedName( SLIDER * s );
 SLIDER VRTurnSpeedSlider = {  40, 150,  5,  75, 0, 0.0F, 0.0F, 0, false, VRTurnSpeedName,    VROptionsSliderSet, NULL };
+char * VRFlyDirName( SLIDER * s );
+SLIDER VRFlyDirSlider    = {   0,   2,  1,   0, 0, 0.0F, 0.0F, 0, false, VRFlyDirName,       VROptionsSliderSet, NULL };
 SLIDER VRHudSizeSlider   = { 100, 250, 10, 100, 0, 0.0F, 0.0F, 0, false, VRPercentName,      VROptionsSliderSet, NULL };
 SLIDER VRPanelSizeSlider = {  12,  40,  1,  22, 0, 0.0F, 0.0F, 0, false, VRMetresTenthsName, VROptionsSliderSet, NULL };
 SLIDER VRPanelDistSlider = { 100, 300,  5, 175, 0, 0.0F, 0.0F, 0, false, VRMetresCmName,     VROptionsSliderSet, NULL };
@@ -2926,11 +2929,12 @@ MENU	MENU_VR_Comfort = {
 		{ 200, 128 + ( 0*16 ), 0, 0, 0, "Leftorium (left-handed)", 0, 0, &vrm_leftorium,    VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
 		{ 200, 128 + ( 1*16 ), 0, 0, 0, "Swap sticks",             0, 0, &vrm_swapsticks,   VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
 		{ 200, 128 + ( 2*16 ), 0, 0, 0, "Turn speed",              0, 0, &VRTurnSpeedSlider, VROptionsSliderDone, SelectSlider, DrawVRSlider, NULL, 0 },
-		{ 200, 128 + ( 3*16 ), 0, 0, 0, "Invert pitch",            0, 0, &vrm_invertpitch,  VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
-		{ 200, 128 + ( 4*16 ), 0, 0, 0, "Auto-level",              0, 0, &vrm_autolevel,    VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
-		{ 200, 128 + ( 5*16 ), 0, 0, 0, "Swivel chair",            0, 0, &vrm_swivel,       VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
-		{ 200, 128 + ( 6*16 ), 0, 0, 0, "Vibration",               0, 0, &vrm_vibration,    VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
-		{ 200, 128 + ( 7*16 ), 0, 0, 0, "Ship bob",                0, 0, &vrm_bob,          VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
+		{ 200, 128 + ( 3*16 ), 0, 0, 0, "Fly direction",           0, 0, &VRFlyDirSlider,   VROptionsSliderDone, SelectSlider, DrawVRSlider, NULL, 0 },
+		{ 200, 128 + ( 4*16 ), 0, 0, 0, "Invert pitch",            0, 0, &vrm_invertpitch,  VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
+		{ 200, 128 + ( 5*16 ), 0, 0, 0, "Auto-level",              0, 0, &vrm_autolevel,    VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
+		{ 200, 128 + ( 6*16 ), 0, 0, 0, "Swivel chair",            0, 0, &vrm_swivel,       VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
+		{ 200, 128 + ( 7*16 ), 0, 0, 0, "Vibration",               0, 0, &vrm_vibration,    VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
+		{ 200, 128 + ( 8*16 ), 0, 0, 0, "Ship bob",                0, 0, &vrm_bob,          VROptionsToggled,    SelectToggle, DrawToggle,   NULL, 0 },
 		{ -1 , -1, 0, 0, 0, "" , 0, 0, NULL, NULL , NULL , NULL, NULL, 0 }
 	}
 };
@@ -3016,7 +3020,11 @@ MENU	MENU_VROptions = {
 	"VR Options", VROptionsLoad, NULL, NULL, 0,
 	{
 		{ 200, 128 + ( 0*16 ), 0, 0, 0, "Recenter",              0, 0, NULL, NULL,             VROptionsRecenter, MenuItemDrawName, NULL, 0 },
-		{ 200, 128 + ( 2*16 ), 0, 0, 0, "Play style",            0, 0, &VRPlayStyleSlider, VROptionsSliderDone, SelectSlider, DrawVRSlider, NULL, 0 },
+#if defined(_WIN32) && !defined(__ANDROID__)
+		/* the book is a PC layer; the standalone builds keep the gap */
+		{ 200, 128 + ( 1*16 ), 0, 0, 0, "Game Tome",             0, 0, NULL, NULL,             VROptionsGameTome, MenuItemDrawName, NULL, 0 },
+#endif
+		{ 200, 128 + ( 2*16 ), 0, 0, 0, "Play style",           0, 0, &VRPlayStyleSlider, VROptionsSliderDone, SelectSlider, DrawVRSlider, NULL, 0 },
 		{ 200, 128 + ( 3*16 ), 0, 0, 0, "Hands and Aim",         0, 0, NULL, &MENU_VR_Comfort, MenuChange,        MenuItemDrawName, NULL, 0 },
 		{ 200, 128 + ( 4*16 ), 0, 0, 0, "HUD and Observer View", 0, 0, NULL, &MENU_VR_Screen,  MenuChange,        MenuItemDrawName, NULL, 0 },
 		{ 200, 128 + ( 5*16 ), 0, 0, 0, "Controls",              0, 0, NULL, &MENU_VR_Controls, MenuChange,       MenuItemDrawName, NULL, 0 },
@@ -9713,6 +9721,10 @@ bool         vr_invert_pitch = VR_INVERT_PITCH_DEFAULT;
 static bool  vr_cfg_invertpitch = VR_INVERT_PITCH_DEFAULT; /* as saved: -vrinvertpitch:N is for this run only */
 int          vr_turn_speed = 75;    /* VRTurnSpeed: the right stick's turn rate, % of the game's */
 static int   vr_cfg_turn   = 75;
+extern int   vr_fly_dir;            /* oct2.c, VRFlyDirection: 0 ship, 1 head, 2 off hand */
+/* TEST BUILD: Head to start with, for v1.2 test1; the release default is 0, the ship. */
+#define VR_FLY_DIR_DEFAULT 0
+static int   vr_cfg_flydir = VR_FLY_DIR_DEFAULT;
 bool         vr_play_style_force = false;   /* -askplaystyle: ask even in a desk run */
 
 /* ------------------------------------------------------------ VR options
@@ -9748,6 +9760,7 @@ static void WriteVRPrefs( void )
 	config_set_bool ( "VRAutoLevel",  vr_cfg_autolevel );
 	config_set_bool ( "VRInvertPitch", vr_cfg_invertpitch );
 	config_set_int  ( "VRTurnSpeed",  vr_cfg_turn );
+	config_set_int  ( "VRFlyDirection", vr_cfg_flydir );
 	config_save();
 }
 
@@ -9777,6 +9790,7 @@ void VROptionsLoad( MENU * Menu )
 
 	VRVignetteSlider.value  = vr_clampi( vr_vignette, 0, 2 );
 	VRTurnSpeedSlider.value = vr_clampi( vr_turn_speed, 40, 150 );
+	VRFlyDirSlider.value    = vr_clampi( vr_fly_dir, 0, 2 );
 	VRHudSizeSlider.value   = vr_clampi( hud_font_scale > 0.0f
 	                              ? (int)( hud_font_scale * 10.0f + 0.5f ) * 10 : 100, 100, 250 );
 	VRPanelSizeSlider.value = vr_clampi( (int)( vr_panel_width * 10.0f + 0.5f ), 12, 40 );
@@ -9841,6 +9855,8 @@ bool VROptionsSliderSet( SLIDER * s )
 		vr_vignette = vr_cfg_vignette = s->value;
 	else if( s == &VRTurnSpeedSlider )
 		vr_turn_speed = vr_cfg_turn = s->value;
+	else if( s == &VRFlyDirSlider )
+		vr_fly_dir = vr_cfg_flydir = vr_clampi( s->value, 0, 2 );
 	else if( s == &VRHudSizeSlider )
 		/* 100% is "automatic", which in VR is the size confirmed in a headset */
 		hud_font_scale = vr_cfg_font = ( s->value <= 100 ) ? 0.0f : s->value / 100.0f;
@@ -9919,6 +9935,13 @@ void VROptionsRecenter( MENUITEM * Item )
 	vr_recenter();
 	vr_panel_replace();
 	DebugPrintf( "vr options: recenter\n" );
+}
+
+/* The Game Tome: the book opens over the pause menu, which holds the game. */
+void VROptionsGameTome( MENUITEM * Item )
+{
+	(void) Item;
+	vr_gametome_open();
 }
 
 /* ------------------------------------------------------------ menu pointer
@@ -10041,6 +10064,11 @@ void VRDrawPointer( void )
 char * VRPlayStyleName( SLIDER * s )
 {
 	return s->value ? "modern" : "classic";
+}
+
+char * VRFlyDirName( SLIDER * s )
+{
+	return s->value == 1 ? "head" : ( s->value == 2 ? "off hand" : "ship" );
 }
 
 void VRPlayStyleGate( MENUITEM * Item )
@@ -10337,6 +10365,7 @@ void GetGamePrefs( void )
 	vr_auto_level  = vr_cfg_autolevel = config_get_bool( "VRAutoLevel", true );
 	vr_invert_pitch = vr_cfg_invertpitch = config_get_bool( "VRInvertPitch", VR_INVERT_PITCH_DEFAULT );
 	vr_turn_speed  = vr_cfg_turn   = config_get_int ( "VRTurnSpeed", 75 );
+	vr_fly_dir     = vr_cfg_flydir = vr_clampi( config_get_int( "VRFlyDirection", VR_FLY_DIR_DEFAULT ), 0, 2 );
 	if( vr_turn_speed < 40 || vr_turn_speed > 150 ) vr_turn_speed = vr_cfg_turn = 75;
 	vrb_load();   /* the Controls page's maps (vr_binds.c) */
 

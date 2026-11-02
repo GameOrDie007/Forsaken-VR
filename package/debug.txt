@@ -84,6 +84,7 @@ TrackerEnabled = true
 TrackerPort = 47624
 TrackerServer = "fly.thruhere.net"
 UseShortPackets = true
+VRFlyDirection = 0
 VRHudAnchor = 1
 VRInvertPitch = false
 VRLeftorium = false

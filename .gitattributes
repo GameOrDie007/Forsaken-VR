@@ -1,0 +1,3 @@
+# The Steam Frame runs these: LF line endings, whatever the checkout's own setting.
+package/quest/frame/library.sh text eol=lf
+package/quest/frame/library.py text eol=lf

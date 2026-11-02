@@ -27,7 +27,7 @@ For the standalone version on a Quest 3 or a Steam Frame, see
 
 ### Installing by hand
 
-1. Download `Forsaken-VR-1.1.1-PCVR.zip` from [Releases](../../releases) and
+1. Download `Forsaken-VR-1.2-PCVR.zip` from [Releases](../../releases) and
    unzip it anywhere.
 2. Run **`Setup.bat`**. It takes a few minutes the first time, and asks one
    question: whether to add Forsaken VR to your Steam library.
@@ -66,7 +66,7 @@ already fetched.
 
 **Uninstalling:** run `Uninstall.bat` in the VR folder. It removes everything
 Setup added (the game, its data, the launchers, the shortcut and the Steam
-entry) and keeps your pilot, saved games and settings. Forsaken Remastered
+entry) and keeps your pilot, saved games, settings and Game Tome notes. Forsaken Remastered
 itself is never touched.
 
 ### Optional extras from your own Forsaken Remastered
@@ -116,7 +116,7 @@ fixed it completely in testing, at full resolution.
 
 Forsaken VR also runs on the Quest 3 by itself, with no PC while you play.
 
-1. Download `Forsaken-VR-1.1.1-Quest.zip` from [Releases](../../releases) and
+1. Download `Forsaken-VR-1.2-Quest.zip` from [Releases](../../releases) and
    unzip it on your PC.
 2. Turn the headset on, plug it into the PC with a USB-C cable, and
    double-click **`Setup.bat`**. The first time, put the headset on and allow
@@ -135,14 +135,14 @@ except the observer view.
 ## Standalone on Steam Frame
 
 The Quest download also runs on a Valve Steam Frame with no PC, under Lepton
-(the Frame's Android layer), installed over Wi-Fi.
+(the Frame's Android layer), in the Frame's own library.
 
-1. On the Frame, turn on Developer Mode and set a user password (Settings,
-   Developer), and start **Lepton Development** from its library.
-2. On the PC, double-click **`Setup Steam Frame.bat`** and type the Frame's
-   name (Settings, System, Hostname). It installs the app and copies the game
-   over.
-3. Start it with **`Start on Steam Frame.bat`**.
+1. On the Frame, turn on Developer Mode (Settings, System) and set a user
+   password (Settings, Developer). Lepton must be installed (Store).
+2. On the PC, double-click **`Setup Steam Frame.bat`**. The first time, on the
+   Frame: Settings, Developer, Pair new host, then Accept. It copies the app
+   and the game over your home network and adds Forsaken VR to the library.
+3. On the Frame: **Library**, then **Forsaken VR**.
 
 It runs at 72 Hz, the Frame's rate for standalone games.
 
@@ -195,6 +195,7 @@ behind the ship either way.
 | B | Drop mine |
 | Menu button | Pause. **Hold it** to recenter |
 | Both grips together | Recenter |
+| Both palms up together, a second | The Game Tome |
 
 **In menus:** either stick moves, A chooses, B goes back. Or **hold the grip** of
 your gun hand and point at the menu screen: a mark shows where you point, the
@@ -226,6 +227,7 @@ layout: the same as the Quest's wherever the Frame has the same button.
 | D-pad up | Rear-view mirror on and off |
 | D-pad down, View or Menu | Pause. **Hold** to recenter |
 | Both grips together | Recenter |
+| Both palms up together, a second | The Game Tome |
 
 SteamVR may keep View and Menu for itself, so D-pad down pauses too.
 
@@ -265,15 +267,16 @@ Rebind through the in-game F1 menu.
 Everything VR is in the game's menus, so you can change it in the headset:
 
 - **Pause menu > VR Options**, right under Resume. A short first page with
-  **Recenter** and **Play style**, then four pages: **Hands and Aim** (Leftorium,
-  swap sticks, turn speed, invert pitch, auto-level, swivel chair, vibration, ship bob),
+  **Recenter**, **Game Tome** and **Play style**, then four pages: **Hands and Aim** (Leftorium,
+  swap sticks, turn speed, fly direction, invert pitch, auto-level, swivel chair, vibration, ship bob),
   **HUD and Observer View** (HUD size, HUD on the cockpit, menu screen size and
   distance, world behind menus, rear-view mirror, missile camera, the observer
   view), **Controls** (which button does what, for the controllers in your
   hands, with Reset to defaults) and **Picture and Startup** (resolution, the
   intro).
 - **Title screen > Options > Visuals > VR Options**: the same settings on one
-  screen, with Controls on a page of its own.
+  screen (all but Fly direction, which is in the pause menu), with Controls on a
+  page of its own.
 
 In the headset, **Options** in the pause menu shows only what matters in VR;
 **All options** at its foot brings back the full list.
@@ -289,6 +292,7 @@ time the game starts.
 |---|---|---|
 | Play style | Modern | See Play style. |
 | Turn speed | 75% | How fast the right stick turns and pitches the ship, as a share of the original game's rate. Lower is gentler on the stomach. |
+| Fly direction | Ship | Which way the sticks push you. **Ship**: along the ship's nose, as in the original game. **Head**: where you look, so looking up and pushing forward flies you up. **Off hand**: where your other hand points. The ship itself does not turn, so your guns keep their aim. |
 | Invert pitch | Off | Stick up puts the nose down and stick down lifts it, the way a flight stick works. The game's own Invert Y only changes the mouse. |
 | Auto-level | On | When you are not rolling, the ship slowly rolls back level, so a turn that mixes yaw and pitch does not leave you tilted. Turn it off to stay at whatever roll you leave the ship in. |
 | Swivel chair | Off | For a chair that turns: turn your body and the ship turns with you, so you fly where you face and the cockpit comes round with you. The right stick still turns the ship too. |
@@ -311,6 +315,22 @@ window and back, and the game remembers which.
 Menus are words floating in the world, with no screen behind them, as they are
 on a monitor: the title's pages lie on the big screen in the title room, and the
 pause menu floats in front of the frozen level.
+
+### The Game Tome
+
+**Hold both hands out in front of you, palms up, as if holding an open book, for a
+second**, and the Game Tome opens in your off hand: Forsaken's manual, with the
+controls and VR Options at the front and pages for your own notes at the back. In
+flight the game pauses first. **VR Options > Game Tome** opens it too.
+
+Turn a page by reaching to its edge with your aiming hand, pulling the trigger and
+drawing it across, or with either stick. Point at a line on the Controls page and
+that button lights up on the controller. On a notes page your hand holds a pen:
+touch the paper to write. The PC keyboard types on the notes too. **B, Y or Menu
+closes it**, and it opens again where you left it. What you write stays in the
+game's `gametome` folder, and updating keeps it.
+
+The Game Tome is on PC VR for now.
 
 ### Photo mode
 
@@ -381,6 +401,7 @@ VRVignette   = 0       comfort vignette: 0 off, 1 light, 2 strong
 VRShipBob    = true    the idle drift of a ship at rest
 VRSwivel     = false   swivel chair: turning your body turns the ship
 VRAutoLevel  = true    auto-level: the ship rolls back level when you are not rolling
+VRFlyDirection = 0     fly direction: 0 the ship's nose, 1 where you look, 2 where your off hand points
 VRInvertPitch = false  invert pitch: stick up puts the nose down
 VRTurnSpeed  = 75      the right stick's turn rate, % of the original game's (40 to 150)
 VRVibration  = 1       controller vibration: 0 off, 1 on
@@ -411,6 +432,7 @@ launcher:
 | `-vrshipbob:N` | 1 | 0 = no idle drift. |
 | `-vrswivel:N` | 0 | 1 = swivel chair. |
 | `-vrautolevel:N` | 1 | 0 = no auto-level. |
+| `-vrflydir:N` | 0 | Fly direction: 0 the ship's nose, 1 where you look, 2 where your off hand points. |
 | `-vrinvertpitch:N` | 0 | 1 = stick up puts the nose down. |
 | `-vrturnspeed:N` | 75 | The right stick's turn rate, % of the original game's (40 to 150). |
 | `-vrvibration:N` | 1 | Controller vibration: 0 off, 1 on. |
@@ -461,6 +483,11 @@ products that own them, onto your machine, at setup time.
 The splash picture (`art/vrsplash.png`) is not covered by the GPL either. It
 is © 2026 Game Or Die, all rights reserved, and may be used only as part of
 Forsaken VR.
+
+The Game Tome (`gametome` in the game's folder) is a separate program, an
+OpenXR layer the game loads beside it, and is not part of this source or
+covered by the GPL. It is © 2026 Game Or Die, all rights reserved, and may be
+redistributed only as part of Forsaken VR.
 
 ---
 

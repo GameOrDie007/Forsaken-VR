@@ -1,16 +1,11 @@
 @echo off
-rem Forsaken VR on a Steam Frame: starts the game on the Frame
-rem (Lepton has no launcher for it).  Run "Setup Steam Frame.bat" first.
+rem Starts Forsaken VR on the Steam Frame, as its library would (it is there too: Library,
+rem then Forsaken VR).  Run "Setup Steam Frame.bat" first.
+rem No parenthesised blocks: a path with "(x86)" in it would end them early.
 setlocal
-set "ADDR="
-if exist "%~dp0files\frame-address.txt" set /p ADDR=<"%~dp0files\frame-address.txt"
-if "%ADDR%"=="" goto none
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0files\setup-quest.ps1" -Start -Serial "%ADDR%"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0files\setup-quest.ps1" -Start -SteamFrame %*
 set "RC=%ERRORLEVEL%"
+echo %* | findstr /i /c:"-Quiet" /c:"-Json" >nul && exit /b %RC%
 echo.
 pause
 exit /b %RC%
-:none
-echo   Run "Setup Steam Frame.bat" first: it asks for the Frame's name.
-pause
-exit /b 3

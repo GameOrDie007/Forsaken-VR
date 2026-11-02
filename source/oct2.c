@@ -1665,6 +1665,35 @@ bool vr_aim_world( VECTOR * origin, VECTOR * dir )
 	return true;
 }
 
+/* Fly direction (VRFlyDirection): 0 the ship's nose, as in 1998; 1 where the
+   head looks; 2 where the off hand points. The sticks' and the cruise's push
+   is turned by the head's or the hand's rotation in the cockpit before it is
+   added to the ship's speed (ShipMode0), so the ship flies that way without
+   turning: the guns keep their aim. The rotation is the one vr_aim_world()
+   gives the gun hand, so it is in the ship's own axes. False -> the nose. */
+int vr_fly_dir = 0;
+
+bool vr_fly_rotation( MATRIX * h )
+{
+	const float * q = NULL;
+	MATRIX raw;
+
+	if( !vr_enabled || vr_fly_dir == 0 || WhoIAm >= MAX_PLAYERS )
+		return false;
+	if( vr_fly_dir == 1 )
+		q = vr_eye[0].quat;   /* the last head pose located (the game runs between frames) */
+	else
+	{
+		const vr_hand_pose_t * a = &vr_aim[ vr_leftorium ? 1 : 0 ];   /* the hand not on the primary trigger */
+		if( !a->valid )
+			return false;
+		q = a->quat;
+	}
+	VRQuatToMatrix( q, &raw );
+	VRTransposeRotation( &raw, h );
+	return true;
+}
+
 /* The direction a shot of ours leaves in: the ship's nose, or in Modern the
    gun hand's aim. Called where FirePrimary/FireSecondary took the nose. */
 void vr_fire_dir( VECTOR * dir )

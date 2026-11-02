@@ -755,6 +755,21 @@ void ReadInput( void )
 	if ( vr_enabled && vr_input_active && vr_input.menu_edge && !vr_photo_mode )
 		input_buffer_send( SDLK_ESCAPE );
 
+	/* The Game Tome opened in flight by its own gesture (both palms up): pause
+	   first, as the menu button does, so the game waits under the book and the
+	   pause menu is there when it closes. Once per opening; from the menu row
+	   the menu is already up. */
+	{
+		static bool book_was = false;
+		bool book = vr_enabled && vr_gametome_showing();
+		if ( book && !book_was && !MenuIsActive() && MyGameStatus == STATUS_Normal )
+		{
+			input_buffer_send( SDLK_ESCAPE );
+			DebugPrintf( "gametome: opened in flight, so the game pauses under it\n" );
+		}
+		book_was = book;
+	}
+
 	if ( vr_enabled && vr_input_active && !MenuIsActive() )
 	{
 		/* the pull-back view cycles: cockpit -> near -> far (right stick

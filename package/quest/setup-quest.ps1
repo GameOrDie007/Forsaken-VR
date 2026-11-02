@@ -10,15 +10,18 @@
 # then installed on the headset with the app.  No game data ships with this port.
 #
 #   Setup.bat                   install (or update) on a Quest, by USB
-#   Setup Steam Frame.bat       the same on a Steam Frame, over Wi-Fi (-Serial)
-#   Start on Steam Frame.bat    -Start: Lepton has no launcher for the app
 #   Uninstall.bat               -Uninstall: copies your pilots, saved games and
 #                               settings onto this PC, then removes the app
 #   Collect logs.bat            -Collect: the headset's logs, in one zip on your desktop
+#   Setup Steam Frame.bat       -SteamFrame: the same on a Steam Frame, over the home
+#                               network, into the Frame's own library (the steam-frame kit)
+#   Start on Steam Frame.bat    -Start -SteamFrame: starts it as the Frame's library would
+#   Uninstall Steam Frame.bat   -Uninstall -SteamFrame;  Collect Steam Frame logs.bat  -Collect -SteamFrame
 #
-# The headset talks to the PC through adb, Google's Android tool.  This script
+# A Quest talks to the PC through adb, Google's Android tool.  This script
 # uses one already on the PC (SideQuest's, or one on PATH), or downloads
-# Google's own the first time.
+# Google's own the first time.  A Steam Frame is reached over SSH, paired once
+# (on the Frame: Settings, Developer, Pair new host, then Accept).
 #
 # Safe to run again at any time: files already on the headset are not copied
 # again, and pilots, saved games and settings are never overwritten.
@@ -29,8 +32,10 @@
 #   -DataPath <folder>  a ForsakenX data set already on this PC (no download)
 #   -Json               print the result as JSON on stdout (nothing else)
 #   -Detect             change nothing; report the game, the headset and the install
-#   -Serial <id>        the headset to use when several are connected, or a
-#                       headset on the network (a Steam Frame: its name or address)
+#   -Serial <id>        the Quest to use when several are connected
+#   -SteamFrame         a Steam Frame instead of a Quest (every mode)
+#   -Frame <name>       the Steam Frame's name or address (else the last one, else a search)
+#   -RefreshHz <n>      the refresh rate SteamVR gives the game on the Frame (0: unchanged)
 # Exit codes: 0 done, 1 no game data, 2 error, 3 no headset.
 
 [CmdletBinding(PositionalBinding = $false)]
@@ -45,11 +50,16 @@ param(
     [string] $DataPath = '',
     [switch] $NoDownload,
     [string] $Serial,
+    [switch] $SteamFrame,
+    [string] $Frame = '',
+    # 72 Hz: the rate the game holds on the Frame (about 13 ms of its 13.9 ms, measured 11 Oct 2026).
+    [int] $RefreshHz = 72,
     # Tests: no questions; only the folders given; this adb; how long to wait.
     [switch] $NoPrompt,
     [switch] $NoSearch,
     [string] $Adb,
     [int] $WaitSeconds = 600,
+    [string] $FrameKeys,
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]] $Dropped
 )
@@ -81,7 +91,7 @@ if ($Quiet -or $Json) { $NoPrompt = $true }
 
 $Product = 'Forsaken VR'
 $ProductFile = 'Forsaken VR'
-$Version = '1.1.1'
+$Version = '1.2'
 $AppId = 'net.gameordie.forsakenvr'
 $AppName = 'Forsaken VR'
 $Activity = $AppId + '/.ForsakenActivity'
@@ -95,7 +105,11 @@ $WritableDirs = @('configs', 'pilots', 'savegame', 'logs')
 # The player's own, on the headset: kept on this PC by every Setup and Uninstall.
 $SaveItems = @('configs/debug.txt', 'player.txt', 'pilots', 'savegame')
 $SaveRoot = Join-Path ([Environment]::GetFolderPath('MyDocuments')) ($ProductFile + '\Quest saves')
-$IsFrame = $false
+$IsFrame = [bool]$SteamFrame
+# The Steam Frame (the steam-frame kit): our folder there, the app's file name, the library name.
+$FrameSlug = 'forsaken-vr'
+$FrameApkName = Split-Path -Leaf $Apk
+$FrameSaveRoot = Join-Path ([Environment]::GetFolderPath('MyDocuments')) ($ProductFile + '\Steam Frame saves')
 
 # --- the log ----------------------------------------------------------------------
 
@@ -104,11 +118,13 @@ if ($Uninstall) { $Mode = 'uninstall' }
 if ($Collect)   { $Mode = 'collect' }
 if ($Detect)    { $Mode = 'detect' }
 if ($Start)     { $Mode = 'start' }
-$LogFile = Join-Path ([System.IO.Path]::GetTempPath()) ('forsaken-vr-quest-' + $Mode + '.txt')
+$LogName = 'forsaken-vr' + $(if ($SteamFrame) { '-frame-' } else { '-quest-' }) + $Mode + '.txt'
+$LogFile = Join-Path ([System.IO.Path]::GetTempPath()) $LogName
 if ($Mode -eq 'install' -and (Test-Path -LiteralPath $Apk)) { $LogFile = Join-Path (Split-Path -Parent $QuestHere) 'setup-log.txt' }
-$Result = [ordered]@{ product = $Product; platform = 'quest'; version = $Version; mode = $Mode; result = 'ok' }
-try { Set-Content -LiteralPath $LogFile -Value ($Product + ' for Quest ' + $Version + ' ' + $Mode + ', ' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + ' on ' + $env:COMPUTERNAME) -Encoding UTF8 }
-catch { $LogFile = Join-Path ([System.IO.Path]::GetTempPath()) ('forsaken-vr-quest-' + $Mode + '.txt'); Set-Content -LiteralPath $LogFile -Value ($Product + ' for Quest ' + $Mode) -Encoding UTF8 }
+$Result = [ordered]@{ product = $Product; platform = $(if ($SteamFrame) { 'steamframe' } else { 'quest' }); version = $Version; mode = $Mode; result = 'ok' }
+$Platform = $(if ($SteamFrame) { 'Steam Frame' } else { 'Quest' })
+try { Set-Content -LiteralPath $LogFile -Value ($Product + ' for ' + $Platform + ' ' + $Version + ' ' + $Mode + ', ' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + ' on ' + $env:COMPUTERNAME) -Encoding UTF8 }
+catch { $LogFile = Join-Path ([System.IO.Path]::GetTempPath()) $LogName; Set-Content -LiteralPath $LogFile -Value ($Product + ' for ' + $Platform + ' ' + $Mode) -Encoding UTF8 }
 
 function Finish([int] $code) {
     if ($Json) {
@@ -122,7 +138,7 @@ trap {
     Log ('ERROR: ' + $_.Exception.Message)
     Log ('  at ' + $_.InvocationInfo.PositionMessage)
     Log ''
-    Log 'Setup stopped.  Run "Collect logs.bat" and send us the file it makes.'
+    Log ('Setup stopped.  Run "' + $(if ($SteamFrame) { 'Collect Steam Frame logs.bat' } else { 'Collect logs.bat' }) + '" and send us the file it makes.')
     $Result['result'] = 'error'
     $Result['error'] = $_.Exception.Message
     if ($Json) { $Result['exitCode'] = 2; Write-Output ($Result | ConvertTo-Json -Depth 5) }
@@ -131,8 +147,8 @@ trap {
 
 function Banner([string] $what) {
     Say ''
-    Say ('  ' + $Product + ' for Quest ' + $Version + ': ' + $what) 'Cyan'
-    Say ('  ' + ('-' * ($Product.Length + $Version.Length + $what.Length + 13)))
+    Say ('  ' + $Product + ' for ' + $Platform + ' ' + $Version + ': ' + $what) 'Cyan'
+    Say ('  ' + ('-' * ($Product.Length + $Platform.Length + $Version.Length + $what.Length + 8)))
     Say ''
 }
 
@@ -530,13 +546,8 @@ function Do-Install {
     Say ''
     Log 'Done.'
     Say ''
-    if ($IsFrame) {
-        Say '  On the Frame: with Lepton Development running, double-click' 'Green'
-        Say '  "Start on Steam Frame.bat".' 'Green'
-    } else {
-        Say '  On the headset: Library, then Unknown Sources, then Forsaken VR.' 'Green'
-        Say '  You can unplug the headset now.'
-    }
+    Say '  On the headset: Library, then Unknown Sources, then Forsaken VR.' 'Green'
+    Say '  You can unplug the headset now.'
     if (Test-Path -LiteralPath $SaveRoot) { Say ('  Pilots, saves and settings are copied to ' + $SaveRoot + ' each time Setup runs.') }
     Finish 0
 }
@@ -634,6 +645,177 @@ function Do-Start {
     Finish 0
 }
 
+# --- the Steam Frame (the steam-frame kit) ----------------------------------------------------
+
+# The Steam Frame route, shared by every Game Or Die port (the Steam Frame kit,
+# copied unchanged into files\frame by tools\make-release-quest.ps1).
+$FrameKitFile = Join-Path $QuestHere 'frame\frame.ps1'
+if (Test-Path -LiteralPath $FrameKitFile) { . $FrameKitFile }
+elseif ($SteamFrame) { throw ('this release has no Steam Frame files (' + $FrameKitFile + ')') }
+
+# Reached, paired and read, or the player's next step and exit 3.
+function Frame-Reach {
+    if (Frame-Connect) { Say ''; Say '  Steam Frame connected.' 'Green'; return }
+    Frame-Help
+    $Result['result'] = 'no headset'
+    Finish 3
+}
+
+# Pilots, saved games and settings onto this PC: never while the game runs (it would lose them).
+function Frame-KeepSaves([string] $why) {
+    if (Frame-GameRunning) { throw ('the game is running on the Frame.  Quit it there, then run this again.') }
+    $to = Join-Path $FrameSaveRoot ((Get-Date -Format 'yyyy-MM-dd HHmm') + $why)
+    $n = Frame-Backup $FrameFiles $SaveItems $to
+    if ($n) { Log ('  ' + $n + ' pilot, save and settings files copied to ' + $to) }
+    return $n
+}
+
+# Every file under a folder on this PC: lowercase name (as the game opens them) -> the file.
+function Files-Under([string] $dir) {
+    $dir = (Resolve-Path -LiteralPath $dir).ProviderPath.TrimEnd('\')
+    $map = @{}
+    foreach ($f in Get-ChildItem -LiteralPath $dir -Recurse -File) { $map[$f.FullName.Substring($dir.Length + 1).Replace('\', '/').ToLowerInvariant()] = $f }
+    return $map
+}
+
+function Do-FrameInstall {
+    Banner 'Setup'
+    if (-not (Test-Path -LiteralPath $Apk)) { throw ('the app is missing from this folder: ' + $Apk) }
+
+    # 1. The game, put together on this PC, as for a Quest.
+    Say '  Looking for Forsaken Remastered on this PC (optional: the soundtrack and intro)...'
+    Search-Roots
+    $rm = Find-Remaster
+    if ($rm) { Log ('Forsaken Remastered: ' + $rm) } else { Log 'Forsaken Remastered: not found.  Forsaken VR does not need it.' }
+    $Result['remaster'] = $rm
+    Log ('The game for the headset is put together in ' + $Stage)
+    $g = Stage-Game $rm
+    if (-not $g.Ok) {
+        Say ''
+        Say '  The game data is not there, so there is nothing to put on the Frame.' 'Yellow'
+        $Result['result'] = 'no game data'
+        Finish 1
+    }
+    $total = ($g.Files.Values | Measure-Object -Property Length -Sum).Sum
+    Log ('the game: ' + $g.Files.Count + ' files, ' + (Size-Text $total))
+
+    # 2. The Frame: found, paired once, read; room for it all.
+    Frame-Reach
+    Frame-Ready ((Get-Item -LiteralPath $Apk).Length + $total)
+
+    # 3. Pilots, saved games and settings: a copy on this PC first, every time.
+    Frame-KeepSaves '' | Out-Null
+
+    # 4. Our files: the app, the library scripts, the art.
+    Say ''
+    Say ('  Copying ' + $Product + ' ' + $Version + ' to the Frame...')
+    $c = Frame-CopyOurs $Apk (Join-Path $QuestHere 'frame')
+
+    # 5. The game's files into the app's own folder, all lowercase (the game lowercases
+    #    every path it opens); the settings the first time only, the player's own after that.
+    Frame-SyncFiles $g.Files $g.Pc $FrameFiles 'the game' | Out-Null
+    $tmpl = Join-Path $g.Pc 'configs\debug.txt'
+    if (Test-Path -LiteralPath $tmpl) {
+        if (Frame-SyncFiles @{ 'configs/debug.txt' = (Get-Item -LiteralPath $tmpl) } $g.Pc $FrameFiles 'the settings' @('configs/debug.txt')) { Log '  settings: the defaults put in place' }
+    }
+
+    # 6. The pilots back, if the Frame has none now (a first install on this route): the
+    #    newest copy Setup kept, from this route or the one before it.
+    $pilots = (Ssh ('ls "' + $FrameFiles + '/pilots" 2>/dev/null | head -1') 30).Out.Trim()
+    $dirs = @(Get-ChildItem -LiteralPath $FrameSaveRoot -Directory -ErrorAction SilentlyContinue | Sort-Object Name -Descending)
+    if (-not $pilots -and $dirs) {
+        $saved = Files-Under $dirs[0].FullName
+        if ($saved.Count) {
+            $n = Frame-SyncFiles $saved $dirs[0].FullName $FrameFiles 'your pilots and saves' @($saved.Keys)
+            if ($n) { Log ('  ' + $n + ' pilot, save and settings files put back (from ' + $dirs[0].Name + ')') }
+        }
+    }
+
+    # 7. The game in the Frame's own library; its own refresh rate.
+    Frame-EnsureEntry $c.ArtChanged
+    Frame-SetRefresh $RefreshHz
+
+    Say ''
+    Log 'Done.'
+    Say ''
+    Say ('  On the Frame: Library, then ' + $AppName + '.') 'Green'
+    if (Test-Path -LiteralPath $FrameSaveRoot) { Say ('  Pilots, saves and settings are copied to ' + $FrameSaveRoot + ' each time Setup runs.') }
+    Finish 0
+}
+
+function Do-FrameUninstall {
+    Banner 'Uninstall'
+    Frame-Reach
+    $kept = Frame-KeepSaves ''
+    Frame-Remove
+    if ($kept) { Say ('  Your pilots, saved games and settings are kept in ' + $FrameSaveRoot + '.') }
+    Say '  The game''s own folder on the Frame (its saves and settings) stays, so a new install picks them up.'
+    Log 'Done.'
+    Finish 0
+}
+
+function Do-FrameCollect {
+    Banner 'Collect logs'
+    $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ('forsaken-vr-frame-logs-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Force -Path $tmp | Out-Null
+    foreach ($f in @((Join-Path (Split-Path -Parent $QuestHere) 'setup-log.txt'), (Join-Path ([System.IO.Path]::GetTempPath()) 'forsaken-vr-frame-uninstall.txt'))) {
+        if (Test-Path -LiteralPath $f) { Copy-Item -LiteralPath $f -Destination $tmp }
+    }
+    if (Frame-Connect) {
+        $to = Join-Path $tmp 'frame'
+        New-Item -ItemType Directory -Force -Path (Join-Path $to 'logs') | Out-Null
+        # The newest five game logs, the crash reports and the settings.
+        $logs = @(((Ssh ('ls -t "' + $FrameFiles + '/logs" 2>/dev/null | head -5') 30).Out -split "`r?`n") | Where-Object { $_.Trim() })
+        foreach ($n in $logs) { Scp-From ($FrameFiles + '/logs/' + $n.Trim()) (Join-Path (Join-Path $to 'logs') $n.Trim()) | Out-Null }
+        foreach ($n in @('crash.txt', 'crash.prev.txt', 'configs/debug.txt')) {
+            Scp-From ($FrameFiles + '/' + $n) (Join-Path $to ($n.Replace('/', '_'))) | Out-Null
+        }
+        Scp-From ($FrameDir + '/library.log') (Join-Path $to 'library.log') | Out-Null
+        Set-Content -LiteralPath (Join-Path $to 'files.txt') -Value ((Ssh ('ls -lR "' + $FrameFiles + '" 2>&1 | grep -v "^-.*\.\(mx\|mxv\|mxa\|bsp\|png\|bmp\|wav\|ogg\|ppm\|ogv\)$" | head -600; ls -l "' + $FrameDir + '" 2>&1') 60).Out) -Encoding UTF8
+        $Result['frame'] = [ordered]@{ address = $FrameAddress; appid = $FrameAppId; files = $FrameFiles }
+    } else {
+        Log 'The Steam Frame could not be reached: only this PC''s logs are collected.'
+    }
+    Copy-Item -LiteralPath $LogFile -Destination $tmp
+    $zip = Join-Path ([Environment]::GetFolderPath('Desktop')) ($ProductFile + ' Steam Frame logs.zip')
+    if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip -Force }
+    Compress-Archive -Path (Join-Path $tmp '*') -DestinationPath $zip
+    Remove-Item -LiteralPath $tmp -Recurse -Force
+    $Result['zip'] = $zip
+    Say ''
+    Say ('  Logs saved to ' + $zip) 'Green'
+    Say '  Send that file to us (Discord or GitHub).'
+    if (-not $NoPrompt) { try { Start-Process explorer.exe ('/select,"' + $zip + '"') } catch { } }
+    Finish 0
+}
+
+function Do-FrameStart {
+    Banner 'Start'
+    Frame-Reach
+    if (-not (Frame-Start)) { throw 'Steam on the Frame did not start the game.  Start it from the Frame''s library.' }
+    Say '  Started.  Put the Frame on.' 'Green'
+    Finish 0
+}
+
+function Do-FrameDetect {
+    Search-Roots
+    $rm = Find-Remaster
+    $Result['remaster'] = $rm
+    $Result['staged'] = Test-Path -LiteralPath (Join-Path $Stage 'pc\Data\levels')
+    Log ('Forsaken Remastered: ' + $(if ($rm) { $rm } else { 'not found' }))
+    $Result['frame'] = Frame-Detect
+    Finish 0
+}
+
+if ($SteamFrame) {
+    switch ($Mode) {
+        'start'     { Do-FrameStart }
+        'uninstall' { Do-FrameUninstall }
+        'collect'   { Do-FrameCollect }
+        'detect'    { Do-FrameDetect }
+        default     { Do-FrameInstall }
+    }
+}
 switch ($Mode) {
     'start'     { Do-Start }
     'uninstall' { Do-Uninstall }

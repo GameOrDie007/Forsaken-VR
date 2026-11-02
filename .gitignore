@@ -35,3 +35,7 @@ crash.prev.txt
 
 # the Android build (tools\build-quest.ps1)
 /build/
+
+# The Game Tome's layer and built book: they go in the release zip, never in the repository
+gametome-drop/
+

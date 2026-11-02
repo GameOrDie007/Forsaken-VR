@@ -67,6 +67,9 @@ static bool probe_level_ended = false; /* -probenextlevel ended one: carry on in
 static bool probe_respawn     = false; /* set by -probedie: pull the trigger until flying again */
 static int probe_crash_ms     = 0;   /* -probecrash:S, an access violation S s in: the crash report */
 static int probe_stick_ms     = 0;   /* -probestick:S, the right stick held full right for 4 s, S s in */
+static int probe_fly_ms       = 0;   /* -probefly:S, the left stick held forward for 1.5 s, S s in */
+extern int vr_fly_dir;               /* oct2.c */
+VECTOR vr_push_total;                /* added up by ships.c ShipMode0 */
 static int   probe_loop_ms    = 0;   /* -probeloop:S:X, the right stick held up (and X sideways) for 4 s */
 static float probe_loop_x     = 0.0f;
 static int   probe_flash_ms   = 0;   /* -probeflash:S, a hit through the damage routine S s in, eyes and HUD screen dumped that frame */
@@ -173,6 +176,11 @@ bool probe_parse_option( const char * option )
 	if ( sscanf( option, "probestick:%d", &n ) == 1 )
 	{
 		probe_stick_ms = n * 1000;
+		return true;
+	}
+	if ( sscanf( option, "probefly:%d", &n ) == 1 )
+	{
+		probe_fly_ms = n * 1000;
 		return true;
 	}
 	if ( sscanf( option, "probefire:%d", &n ) == 1 )
@@ -597,6 +605,43 @@ void probe_frame( void )
 				DebugPrintf( "probe: right stick let go\n" );
 			held = false;
 			vr_input.look_x = 0.0f;
+		}
+	}
+
+	/* Fly direction: the left stick held forward for 1.5 s, S s in. Logs the
+	   ship's own speed at the end (it is kept in the ship's axes: x right,
+	   y up, z forward) as the angles it makes with the nose, so a head turned
+	   60 deg with Fly direction "head" must read about 60 deg across. */
+	if ( probe_fly_ms && MyGameStatus == STATUS_SinglePlayer )
+	{
+		static u_int32_t since = 0;
+		static int stage = 0;
+		u_int32_t t;
+		if ( !since )
+			since = now;
+		t = now - since;
+		vr_input_active = true;
+		if ( stage == 0 && t > (u_int32_t) probe_fly_ms )
+		{
+			DebugPrintf( "probe: left stick held forward (fly direction %d)\n", vr_fly_dir );
+			vr_push_total.x = vr_push_total.y = vr_push_total.z = 0.0f;
+			stage = 1;
+		}
+		if ( stage == 1 )
+		{
+			vr_input.move_y = 1.0f;
+			if ( t > (u_int32_t) probe_fly_ms + 1500 )
+			{
+				/* the pushes themselves (ships.c), which walls cannot bend,
+				   and the speed they made */
+				VECTOR p = vr_push_total, s = Ships[ WhoIAm ].Object.Speed;
+				DebugPrintf( "probe: fly done, the push (%.2f, %.2f, %.2f) is %.1f deg across and %.1f deg up from the nose; speed %.1f deg across, %.1f up\n",
+				             p.x, p.y, p.z,
+				             (float) ( atan2( p.x, p.z ) * 57.29578 ), (float) ( atan2( p.y, sqrt( p.x * p.x + p.z * p.z ) ) * 57.29578 ),
+				             (float) ( atan2( s.x, s.z ) * 57.29578 ), (float) ( atan2( s.y, sqrt( s.x * s.x + s.z * s.z ) ) * 57.29578 ) );
+				vr_input.move_y = 0.0f;
+				stage = 2;
+			}
 		}
 	}
 

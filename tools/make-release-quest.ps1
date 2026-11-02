@@ -1,12 +1,13 @@
 # Builds the Quest and Steam Frame release folder and zip from the signed app
 # (build-quest.ps1 -Release) and package\quest\:
 #
-#   <Name>\Setup.bat, Setup Steam Frame.bat, Start on Steam Frame.bat,
+#   <Name>\Setup.bat, Setup Steam Frame.bat, Start on Steam Frame.bat, Uninstall Steam Frame.bat,
 #          Uninstall.bat, Collect logs.bat, Collect Steam Frame logs.bat,
 #          README.txt, THIRD-PARTY.txt, LICENSE, licenses\
 #   <Name>\files\setup-quest.ps1, files\setup-common.ps1 (the PC Setup: its search and
 #          data functions), files\ForsakenVR.apk, files\vrsplash.png,
-#          files\game\ (the scripts, the default settings, the playlist)
+#          files\game\ (the scripts, the default settings, the playlist),
+#          files\frame\ (the steam-frame kit and the Frame's library art)
 #
 # Nothing of the game's own data: Setup downloads the ForsakenX data set and
 # takes the music and film from the player's Forsaken Remastered.  -Apk takes
@@ -28,12 +29,21 @@ Copy-Item -LiteralPath $Apk (Join-Path $Dir 'files\ForsakenVR.apk')
 Copy-Item (Join-Path $Repo 'package\quest\setup-quest.ps1') (Join-Path $Dir 'files\setup-quest.ps1')
 Copy-Item (Join-Path $Repo 'package\setup.ps1') (Join-Path $Dir 'files\setup-common.ps1')	# not setup.ps1: that name marks a PC zip for the installer
 Copy-Item (Join-Path $Repo 'art\vrsplash.png') (Join-Path $Dir 'files\vrsplash.png')
+# The Steam Frame route (the Steam Frame kit, shared by every Game Or Die port, copied
+# into package\quest\frame) and the library art (tools\make-frame-art.py).  Copied as bytes: the
+# .sh and .py keep their LF line endings, which the Frame needs.
+New-Item -ItemType Directory -Force -Path (Join-Path $Dir 'files\frame') | Out-Null
+foreach ($f in @('frame.ps1', 'library.sh', 'library.py')) { Copy-Item (Join-Path $Repo ('package\quest\frame\' + $f)) (Join-Path $Dir ('files\frame\' + $f)) }
+foreach ($f in @('cover.jpg', 'wide.jpg', 'hero.jpg', 'icon.png')) { Copy-Item (Join-Path $Repo ('package\quest\frame-art\' + $f)) (Join-Path $Dir ('files\frame\' + $f)) }
+foreach ($f in @('library.sh', 'library.py')) {
+    if ([IO.File]::ReadAllText((Join-Path $Dir ('files\frame\' + $f))).Contains("`r")) { throw ($f + ' has CR line endings; the Frame needs LF') }
+}
 # The game's own files that are ours: its scripts, the default settings, our playlist.
 robocopy (Join-Path $Repo 'scripts') (Join-Path $Dir 'files\game\scripts') /e /njh /njs /ndl /nc /ns /np | Out-Null
 Copy-Item (Join-Path $Repo 'package\debug.txt') (Join-Path $Dir 'files\game\configs\debug.txt')
 Copy-Item (Join-Path $Repo 'music\playlist.txt') (Join-Path $Dir 'files\game\Music\playlist.txt')
 
-$texts = @('Setup.bat', 'Setup Steam Frame.bat', 'Start on Steam Frame.bat', 'Uninstall.bat', 'Collect logs.bat', 'Collect Steam Frame logs.bat', 'README.txt', 'THIRD-PARTY.txt')
+$texts = @('Setup.bat', 'Setup Steam Frame.bat', 'Start on Steam Frame.bat', 'Uninstall Steam Frame.bat', 'Uninstall.bat', 'Collect logs.bat', 'Collect Steam Frame logs.bat', 'README.txt', 'THIRD-PARTY.txt')
 foreach ($f in $texts) {
     # CRLF for the batch files and the text: Notepad and cmd both want it.
     $t = (Get-Content -Raw -LiteralPath (Join-Path $Repo ('package\quest\' + $f))) -replace "`r?`n", "`r`n"
